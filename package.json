@@ -1,11 +1,40 @@
 {
+  "name": "mira-apis",
+  "version": "1.0.0",
+  "description": "Simple APIs",
+  "main": "index.js",
   "scripts": {
-    "start": "nodemon index.js"
+    "start": "clear && npx tsc && node dist/index.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GiaKhang1810/mira-apis.git"
+  },
+  "keywords": [
+    "mira"
+  ],
+  "author": "KhanG",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/GiaKhang1810/mira-apis/issues"
+  },
+  "homepage": "https://github.com/GiaKhang1810/mira-apis#readme",
   "dependencies": {
-    "express": "^4.21.2"
+    "axios": "^1.8.1",
+    "bcryptjs": "^3.0.2",
+    "chalk": "^4.1.2",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.4.7",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
-    "nodemon": "^3.1.0"
+    "@types/chalk": "^0.4.31",
+    "@types/cookie-parser": "^1.4.8",
+    "@types/dotenv": "^6.1.1",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.10",
+    "typescript": "^5.8.2"
   }
 }
