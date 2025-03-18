@@ -4,7 +4,7 @@
   "description": "Simple APIs",
   "main": "index.js",
   "scripts": {
-    "start": "clear && npx tsc && node dist/index.js"
+    "start": "( (command -v clear >/dev/null && clear) || (command -v cls >/dev/null && cls) || node -e \"console.clear()\") && npx tsc && node dist/index.js"
   },
   "repository": {
     "type": "git",
@@ -27,7 +27,9 @@
     "dotenv": "^16.4.7",
     "ejs": "^3.1.10",
     "express": "^4.21.2",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "sequelize": "^6.37.6",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "@types/chalk": "^0.4.31",
@@ -35,6 +37,8 @@
     "@types/dotenv": "^6.1.1",
     "@types/express": "^5.0.0",
     "@types/node": "^22.13.10",
+    "@types/sequelize": "^4.28.20",
+    "@types/sqlite3": "^3.1.11",
     "typescript": "^5.8.2"
   }
 }

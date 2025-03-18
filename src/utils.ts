@@ -4,8 +4,8 @@ import chalk from "chalk";
 
 const ERROR_LOG = path.resolve(process.env.ERROR_LOG || "./database/error.log");
 
-export function getTime(format: string | undefined, date: Date | undefined | null): string {
-    format = format || "HH:mm:ss DD/MM/YYYY";
+export function getTime(format: string = "HH:mm:ss DD/MM/YYYY", date: Date = new Date()): string {
+    format = format ? format : "HH:mm:ss DD/MM/YYYY";
     const cDate = date ? date : new Date();
 
 
@@ -42,15 +42,15 @@ export function getTime(format: string | undefined, date: Date | undefined | nul
 
 export const log = {
     info: (name: string, message: string): void => {
-        const time = getTime("[ HH:mm:ss | DD/MM/YYYY ]", null);
+        const time = getTime("[ HH:mm:ss | DD/MM/YYYY ]");
         console.log(chalk.green(time), name + ":", message);
     },
     warn: (name: string, message: string): void => {
-        const time = getTime("[ HH:mm:ss | DD/MM/YYYY ]", null);
+        const time = getTime("[ HH:mm:ss | DD/MM/YYYY ]");
         console.log(chalk.yellow(time), name + ":", message);
     },
     error: (name: string, error: Error): void => {
-        const time = getTime("[ HH:mm:ss | DD/MM/YYYY ]", null);
+        const time = getTime("[ HH:mm:ss | DD/MM/YYYY ]");
         console.log(chalk.red(time), name + ":", error.message);
         const ErrorLog =
             time +

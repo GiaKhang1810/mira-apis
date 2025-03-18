@@ -1,20 +1,19 @@
-import * as dotenv from "dotenv";
-import * as path from "path";
-import express, { Request, Response } from "express";
+import "dotenv/config";
+
+import path from "path";
+import express, { Request, Response, Express } from "express";
 import Cookie from "cookie-parser";
-
-dotenv.config();
-
-import utils from "./utils";
-
-const app = express();
-const log = utils.log;
+import { log } from "./utils";
 
 log.wall(30);
 
-const VIEWS_PATH = path.join(__dirname, "views");
-const RSCR_PATH = path.join(__dirname, "public");
-const PORT = process.env.PORT || 8000;
+import "./database/db";
+
+const app: Express = express();
+
+const VIEWS_PATH: string = path.join(__dirname, "views");
+const RSCR_PATH: string = path.join(__dirname, "public");
+const PORT: string | number = process.env.PORT || 8000;
 
 app.set("view engine", "ejs");
 app.set("views", VIEWS_PATH);
