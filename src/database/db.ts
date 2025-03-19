@@ -19,7 +19,7 @@ export interface Schema {
 
 export interface Model<T> {
     model: string;
-    findAll: () => Array<T> | Promise<Array<T>>;
+    findAll: () => Promise<Array<T>>;
     findOne: (condition: Record<string, any>) => Promise<T | undefined>;
     delete: () => Promise<void>;
     deleteOne: (condition: Record<string, any>) => Promise<void>;
@@ -217,7 +217,7 @@ export class DataBase extends EventEmitter {
 
             return {
                 model,
-                findAll: (): Array<T> => this.read()[model],
+                findAll: async (): Promise<Array<T>> => this.read()[model],
                 findOne: async (condition: Record<string, any>): Promise<T | undefined> => {
                     return this.read()[model]?.find((item: T) => Object.keys(condition).every(key => item[key as keyof T] === condition[key]));
                 },
