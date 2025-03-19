@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import chalk from "chalk";
 
-const ERROR_LOG = path.resolve(process.env.ERROR_LOG || "./database/error.log");
+const ERROR_LOG: string = path.resolve(process.cwd(), "database", process.env.ERROR_LOG || "error.log");
 
 export function getTime(format: string = "HH:mm:ss DD/MM/YYYY", cDate: Date = new Date()): string {
     const HH: string = String(cDate.getHours()).padStart(2, "0");
