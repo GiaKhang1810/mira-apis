@@ -1,6 +1,6 @@
-import db from "../db";
+import db, { Model } from "../database/db";
 
-const User = db.define("User", {
+const User: Model<typeof db.define> = db.define("User", {
     userID: {
         type: "String",
         required: true,
@@ -30,7 +30,4 @@ const User = db.define("User", {
     }
 });
 
-export default async function (): Promise<Record<string, any>> {
-    await User.sync();
-    return User;
-}
+export default User;

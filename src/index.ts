@@ -1,27 +1,43 @@
 import "dotenv/config";
-
-import path from "path";
-import express, { Request, Response, Express } from "express";
-import Cookie from "cookie-parser";
-import { log } from "./utils";
-
-log.wall(30);
-
 import "./database/db";
 
-const app: Express = express();
+import path from "path";
+import express, { Request, Response, Express, Router } from "express";
+import Cookie from "cookie-parser";
+import Cors from "cors";
 
-const VIEWS_PATH: string = path.join(__dirname, "views");
-const RSCR_PATH: string = path.join(__dirname, "public");
-const PORT: string | number = process.env.PORT || 8000;
+import RouterUser from "./routers/user";
+import User from "./models/User";
+import { log } from "./utils";
 
-app.set("view engine", "ejs");
-app.set("views", VIEWS_PATH);
-app.set("json spaces", 2);
+!(async (): Promise<void> => {
+    await User.sync();
 
-app.use(Cookie());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use("/r", express.static(RSCR_PATH));
+    log.wall(30);
+    log.info("DataBase", "Connected to " + User.type() + " database");
 
-app.listen(PORT, _ => log.info("Server", "Running on port " + PORT));
+    const app: Express = express();
+    const routerUser: Router = RouterUser(User);
+    const VIEWS_PATH: string = path.join(__dirname, "views");
+    const RSCR_PATH: string = path.join(__dirname, "public");
+    const PORT: string | number = process.env.PORT ?? 8000;
+
+    app.set("view engine", "ejs");
+    app.set("views", VIEWS_PATH);
+    app.set("json spaces", 2);
+
+    app.use(Cookie());
+    app.use(Cors());
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
+    app.use("/r", express.static(RSCR_PATH));
+
+    app.use("/user", routerUser);
+
+    app.get("/", function (req: Request, res: Response): void {
+        res.status(201);
+        res.redirect("/user/signin");
+    });
+
+    app.listen(PORT, _ => log.info("Server", "Running on port " + PORT));
+})();

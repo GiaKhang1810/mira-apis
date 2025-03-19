@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import chalk from "chalk";
 
-const ERROR_LOG: string = path.resolve(process.cwd(), "database", process.env.ERROR_LOG || "error.log");
+const ERROR_LOG: string = path.resolve(process.cwd(), "dist", "database", process.env.ERROR_LOG || "error.log");
 
 export function getTime(format: string = "HH:mm:ss DD/MM/YYYY", cDate: Date = new Date()): string {
     const HH: string = String(cDate.getHours()).padStart(2, "0");
@@ -45,12 +45,12 @@ export const log = {
         const time: string = getTime("[ HH:mm:ss | DD/MM/YYYY ]");
         console.log(chalk.yellow(time), name + ":", message);
     },
-    error: (name: string, error: Error): void => {
+    error: (name: string, error: Record<string, any>): void => {
         const time: string = getTime("[ HH:mm:ss | DD/MM/YYYY ]");
         console.log(chalk.red(time), name + ":", error.message);
         const ErrorLog =
             time +
-            "Error: " + error.name +
+            "\nError: " + error.name +
             "\nMessage: " + error.message +
             "\nStack: " + error.stack +
             "\n" + "-".repeat(50);
@@ -66,9 +66,13 @@ export const log = {
 }
 
 export const getType = (data: unknown): string => Object.prototype.toString.call(data).slice(8, -1);
+export const isEmail = (email: string): boolean => /^[\w.-]+@[a-zA-Z\d.-]+\.[a-zA-Z]{2,}$/.test(email);
+export const generateID = (len: number = 15): string => String(Array.from({ length: len }, (): string => "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[Math.random() * 26 | 0]).reduce((acc: number, char: string): number => acc * 26 + (char.charCodeAt(0) - 65), 0));
 
 export default {
     log,
     getTime,
-    getType
+    getType,
+    isEmail,
+    generateID
 }

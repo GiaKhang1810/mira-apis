@@ -28,6 +28,7 @@ export interface Model<T> {
     create: (data: Record<string, any>) => Promise<T>;
     count: () => Promise<number>;
     sync: () => Promise<void>;
+    type: () => string;
 }
 
 export interface Models {
@@ -41,6 +42,7 @@ export class DataBase extends EventEmitter {
     private models: Models;
     private schemas: Record<string, Schema>;
     private sequelize?: Sequelize;
+    private SQLite?: ModelCtor<ModelSeq<any, any>>;
 
     constructor(STORAGE: string) {
         super();
@@ -53,12 +55,12 @@ export class DataBase extends EventEmitter {
         if (type === "json") {
             this.storage = path.resolve(__dirname, STORAGE + ".json");
 
-            if (!fs.existsSync(this.storage)) {
+            if (!fs.existsSync(this.storage))
                 fs.writeFileSync(this.storage, "{}");
-                log.info("DataBase", "Initialized json storage");
-            }
+
         } else if (type === "sqlite") {
             this.storage = path.resolve(__dirname, STORAGE + ".sqlite");
+
             this.sequelize = new Sequelize({
                 dialect: type,
                 storage: this.storage,
@@ -87,7 +89,18 @@ export class DataBase extends EventEmitter {
                     force: false
                 }
             });
-            log.info("DataBase", "Initialized sqlite storage");
+
+            this.sequelize
+                .authenticate()
+                .catch((error: any): void => {
+                    this.emit("error", {
+                        type: "AuthenticateData",
+                        name: error.name,
+                        message: error.message,
+                        stack: error.stack
+                    });
+                    process.exit(1);
+                });
         } else {
             log.warn("DataBase", `Unsupported STORAGE_TYPE "${type}"`);
             process.exit(1);
@@ -288,8 +301,9 @@ export class DataBase extends EventEmitter {
 
                     return newItem;
                 },
-                count:async  (): Promise<number> => this.read()[model]?.length ?? 0,
-                sync: async (): Promise<void> => this.sync(model, schema)
+                count: async (): Promise<number> => this.read()[model]?.length ?? 0,
+                sync: async (): Promise<void> => this.sync(model, schema),
+                type: (): string => "Json"
             }
         } else {
             const newSchema: Record<string, any> = {}
@@ -330,7 +344,7 @@ export class DataBase extends EventEmitter {
                     }
             }
 
-            const SeqModel: ModelCtor<ModelSeq<any, any>> = this.sequelize!.define(model, newSchema, {
+            this.SQLite = this.sequelize!.define(model, newSchema, {
                 tableName: model,
                 freezeTableName: true,
                 timestamps: true
@@ -339,47 +353,49 @@ export class DataBase extends EventEmitter {
             return {
                 model,
                 findAll: async (): Promise<Array<T>> => {
-                    const results = await SeqModel.findAll();
+                    const results = await this.SQLite!.findAll();
                     return results.map(r => r.get({ plain: true })) as Array<T>;
                 },
                 findOne: async (condition: Record<string, any>): Promise<T | undefined> => {
-                    const result = await SeqModel.findOne({ where: condition });
+                    const result = await this.SQLite!.findOne({ where: condition });
                     return result ? (result.get({ plain: true }) as T) : undefined;
                 },
                 delete: async (): Promise<void> => {
-                    await SeqModel.destroy({ where: {} });
+                    await this.SQLite!.destroy({ where: {} });
                 },
                 deleteOne: async (condition: Record<string, any>): Promise<void> => {
-                    await SeqModel.destroy({ where: condition });
+                    await this.SQLite!.destroy({ where: condition });
                 },
                 update: async (data: Record<string, any>): Promise<Array<T>> => {
-                    await SeqModel.update(data, { where: {} });
-                    const results = await SeqModel.findAll();
+                    await this.SQLite!.update(data, { where: {} });
+                    const results = await this.SQLite!.findAll();
                     return results.map(r => r.get({ plain: true })) as Array<T>;
                 },
                 updateOne: async (condition: Record<string, any>, data: Record<string, any>): Promise<T> => {
-                    await SeqModel.update(data, { where: condition });
-                    const result = await SeqModel.findOne({ where: condition });
+                    await this.SQLite!.update(data, { where: condition });
+                    const result = await this.SQLite!.findOne({ where: condition });
                     if (!result)
                         throw new Error("Update failed");
                     return result.get({ plain: true }) as T;
                 },
                 create: async (data: Record<string, any>): Promise<T> => {
-                    const result = await SeqModel.create(data);
+                    const result = await this.SQLite!.create(data);
                     return result.get({ plain: true }) as T;
                 },
                 count: async (): Promise<number> => {
-                    return await SeqModel.count();
+                    return await this.SQLite!.count();
                 },
                 sync: async (): Promise<void> => {
-                    await SeqModel.sync({ force: false });
+                    await this.SQLite!.sync({ force: false });
+
                     this.emit("info", {
                         type: "SyncModel",
                         model,
                         message: `Model ${model} synced`,
-                        newSchema
+                        schema
                     });
-                }
+                },
+                type: (): string => "SQLite"
             }
         }
     }
