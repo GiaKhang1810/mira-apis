@@ -18,7 +18,7 @@ export interface AuthUser {
 export default function (User: Model<typeof db.define>): AuthUser {
     return {
         signup: async (req: Request, res: Response): Promise<void> => {
-            const { email, password, username } = req.body;
+            const { email, password } = req.body;
 
             try {
                 if (!email || !password) {
@@ -48,7 +48,6 @@ export default function (User: Model<typeof db.define>): AuthUser {
 
                         const newUser: Record<string, any> = await User.create({
                             userID,
-                            username,
                             email,
                             password: await crypt.hash(password, 10)
                         });

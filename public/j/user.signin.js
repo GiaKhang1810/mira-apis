@@ -1,10 +1,10 @@
 function DOMContentLoaded() {
-  var formLogin = document.querySelector("form");
+  var formSignin = document.querySelector("form");
   var togglePassword = document.querySelector("#togglePassword");
   var password = document.querySelector("#password");
   var isSubmitting = false;
 
-  async function formLoginSubmit(event) {
+  async function formSigninSubmit(event) {
     event.preventDefault();
 
     if (isSubmitting)
@@ -13,11 +13,11 @@ function DOMContentLoaded() {
     isSubmitting = true;
 
     const formData = new URLSearchParams();
-    formData.append("email", formLogin.querySelector("#email").value);
+    formData.append("email", formSignin.querySelector("#email").value);
     formData.append("password", password.value);
-    formData.append("remember", formLogin.querySelector("#remember").checked ? "true" : "false");
+    formData.append("remember", formSignin.querySelector("#remember").checked ? "true" : "false");
 
-    var submitButton = formLogin.querySelector("button");
+    var submitButton = formSignin.querySelector("button");
     submitButton.disabled = true;
 
     try {
@@ -29,24 +29,23 @@ function DOMContentLoaded() {
         body: formData
       });
 
-      const result = await res.json();
-      console.log(result);
-
       if (res.ok)
         window.location.href = "/user/dashboard";
-      else
+      else {
+        const result = await res.json();
         alert(result.message);
+      }
 
     } catch (error) {
       console.error(error);
-      formLogin.reset();
+      formSignin.reset();
       alert(error.message);
     } finally {
       submitButton.disabled = false;
       isSubmitting = false;
     }
   }
-  formLogin.addEventListener("submit", formLoginSubmit);
+  formSignin.addEventListener("submit", formSigninSubmit);
 
   togglePassword.addEventListener("click", function (e) {
     var type = password.getAttribute("type") === "password" ? "text" : "password";
@@ -55,11 +54,7 @@ function DOMContentLoaded() {
   });
 
   password.addEventListener("input", function () {
-    if (this.value) {
-      togglePassword.style.display = "inline";
-    } else {
-      togglePassword.style.display = "none";
-    }
+    togglePassword.style.display = this.value ? "inline" : "none"
   });
 
   if (!password.value) {
