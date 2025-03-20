@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import db, { Model } from "../database/db";
-import { log, generateID } from "../utils";
+import { log, generateID, isEmail } from "../utils";
 import jwt, { SignOptions } from "jsonwebtoken";
 import crypt from "bcryptjs";
 
@@ -12,6 +12,7 @@ export interface AuthUser {
     signup: (req: Request, res: Response) => Promise<void>;
     signout: (req: Request, res: Response) => Promise<void>;
     verify: (req: Request, res: Response, next: NextFunction) => Promise<void>;
+    isSignin: (req: Request, res: Response, next: NextFunction) => Promise<void>;
 }
 
 export default function (User: Model<typeof db.define>): AuthUser {
@@ -20,32 +21,44 @@ export default function (User: Model<typeof db.define>): AuthUser {
             const { email, password, username } = req.body;
 
             try {
-                const existingUser = await User.findOne({ email });
-                if (existingUser) {
+                if (!email || !password) {
                     res.status(409);
                     res.json({
-                        message: "Email is already registered"
+                        message: "Email or password is required"
+                    });
+                } else if (!isEmail(email)) {
+                    res.status(409);
+                    res.json({
+                        message: "Invalid email"
                     });
                 } else {
-                    let userID: string;
-                    const allUser: Array<Record<string, any>> = await User.findAll();
+                    const existingUser = await User.findOne({ email });
+                    if (existingUser) {
+                        res.status(409);
+                        res.json({
+                            message: "Email is already registered"
+                        });
+                    } else {
+                        let userID: string;
+                        const allUser: Array<Record<string, any>> = await User.findAll();
 
-                    do {
-                        userID = generateID();
-                    } while (allUser.some((item: Record<string, any>): boolean => item.userID === userID));
+                        do {
+                            userID = generateID();
+                        } while (allUser.some((item: Record<string, any>): boolean => item.userID === userID));
 
-                    const newUser: Record<string, any> = await User.create({
-                        userID,
-                        username,
-                        email,
-                        password: await crypt.hash(password, 10)
-                    });
-    
-                    res.status(201);
-                    res.json({
-                        message: "Account created successfully",
-                        user: newUser
-                    });
+                        const newUser: Record<string, any> = await User.create({
+                            userID,
+                            username,
+                            email,
+                            password: await crypt.hash(password, 10)
+                        });
+
+                        res.status(201);
+                        res.json({
+                            message: "Account created successfully",
+                            user: newUser
+                        });
+                    }
                 }
             } catch (error: any) {
                 log.error("AuthUser.signup", error);
@@ -56,7 +69,7 @@ export default function (User: Model<typeof db.define>): AuthUser {
             }
         },
         signin: async (req: Request, res: Response): Promise<void> => {
-            const { email, password } = req.body;
+            const { email, password, remember } = req.body;
 
             try {
                 const user: Record<string, any> | undefined = await User.findOne({ email });
@@ -66,14 +79,14 @@ export default function (User: Model<typeof db.define>): AuthUser {
                         message: "Invalid email or password"
                     });
                 } else {
-                    const isCorrect = await crypt.compare(password, user.password);
+                    const isCorrect: boolean = crypt.compareSync(password, user.password);
                     if (!isCorrect) {
                         res.status(401);
                         res.json({
                             message: "Invalid email or password"
                         });
                     } else {
-                        const token: string = jwt.sign({ email }, SECRET, { expiresIn: EXPIRES_IN } as SignOptions);
+                        const token: string = jwt.sign({ email }, SECRET, { expiresIn: remember ? "30d" : EXPIRES_IN } as SignOptions);
                         res.cookie("token", token, {
                             httpOnly: true,
                             secure: process.env.NODE_ENV === "production",
@@ -120,6 +133,21 @@ export default function (User: Model<typeof db.define>): AuthUser {
                     res.json({
                         message: "Invalid or expired token"
                     });
+                }
+            }
+        },
+        isSignin: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+            const token: string | undefined = req.cookies?.token;
+
+            if (!token) 
+                next();
+            else {
+                try {
+                    jwt.verify(token, SECRET);
+                    res.status(201);
+                    res.redirect("/user/dashboard");
+                } catch (error: any) {
+                    next();
                 }
             }
         }

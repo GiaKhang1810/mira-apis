@@ -67,7 +67,13 @@ export const log = {
 
 export const getType = (data: unknown): string => Object.prototype.toString.call(data).slice(8, -1);
 export const isEmail = (email: string): boolean => /^[\w.-]+@[a-zA-Z\d.-]+\.[a-zA-Z]{2,}$/.test(email);
-export const generateID = (len: number = 15): string => String(Array.from({ length: len }, (): string => "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[Math.random() * 26 | 0]).reduce((acc: number, char: string): number => acc * 26 + (char.charCodeAt(0) - 65), 0));
+export const generateID = (len: number = 15): string => {
+    let id = Date.now().toString();
+    while (id.length < len) 
+        id += Math.floor(Math.random() * 10);
+
+    return id.slice(0, len);
+}
 
 export default {
     log,
