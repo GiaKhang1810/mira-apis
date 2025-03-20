@@ -254,7 +254,7 @@ export class DataBase extends EventEmitter {
                         db[model] = db[model]?.map(item => ({
                             ...item,
                             ...data,
-                            updateAt: new Date().toUTCString()
+                            updateAt: new Date().toISOString()
                         }));
                         return db;
                     });
@@ -271,7 +271,7 @@ export class DataBase extends EventEmitter {
                                 updatedItem = {
                                     ...item,
                                     ...data,
-                                    updateAt: new Date().toUTCString()
+                                    updateAt: new Date().toISOString()
                                 }
                                 return updatedItem;
                             }
