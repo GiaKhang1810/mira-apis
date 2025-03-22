@@ -1,5 +1,11 @@
 import fs from "fs";
 import path from "path";
+
+const dbCwd: string = path.resolve(process.cwd(), "database");
+
+if (!fs.existsSync(dbCwd))
+    fs.mkdirSync(dbCwd);
+
 import { EventEmitter } from "events";
 import { getType, log } from "../utils";
 import { Sequelize, DataTypes, AbstractDataTypeConstructor, Model as ModelSeq, ModelCtor } from "sequelize";
@@ -55,13 +61,13 @@ export class DataBase extends EventEmitter {
         this.schemas = {}
 
         if (type === "json") {
-            this.storage = path.resolve(__dirname, STORAGE + ".json");
+            this.storage = path.resolve(dbCwd, STORAGE + ".json");
 
             if (!fs.existsSync(this.storage))
                 fs.writeFileSync(this.storage, "{}");
 
         } else if (type === "sqlite") {
-            this.storage = path.resolve(__dirname, STORAGE + ".sqlite");
+            this.storage = path.resolve(dbCwd, STORAGE + ".sqlite");
 
             this.sequelize = new Sequelize({
                 dialect: type,

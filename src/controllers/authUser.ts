@@ -195,10 +195,15 @@ export default function (database: Record<string, Model<typeof db.define>>): Aut
         },
         verifyMail: async (req: Request, res: Response): Promise<void> => {
             const { email } = req.body;
-            if (!isEmail(email)) {
+            if (!email) {
                 res.status(400);
                 res.json({
                     message: "Email is required"
+                });
+            } else if (!isEmail(email)) {
+                res.status(400);
+                res.json({
+                    message: "Invalid email"
                 });
             } else {
                 const existingUser: Record<string, any> | undefined = await User.findOne({ email });

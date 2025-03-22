@@ -2,7 +2,12 @@ import fs from "fs";
 import path from "path";
 import chalk from "chalk";
 
-const ERROR_LOG: string = path.resolve(process.cwd(), "dist", "database", process.env.ERROR_LOG || "error.log");
+const dbCwd: string = path.resolve(process.cwd(), "database");
+
+if (!fs.existsSync(dbCwd))
+    fs.mkdirSync(dbCwd);
+
+const ERROR_LOG: string = path.resolve(dbCwd, process.env.ERROR_LOG || "error.log");
 
 export interface Log {
     info: (name: string, message: string) => void;
