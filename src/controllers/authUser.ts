@@ -7,14 +7,19 @@ import crypt from "bcryptjs";
 import db, { Model } from "../database/db";
 import { log, generateID, isEmail } from "../utils";
 
-const SECRET: string = process.env.TOKEN_SECRET || "nguyengiakhang1810";
-const EXPIRES_IN: string = process.env.EXPIRES_IN || "1d";
+const SECRET: string | undefined = process.env.TOKEN_SECRET;
+const EXPIRES_IN: string | undefined = process.env.EXPIRES_IN;
 
 const GMAIL: string | undefined = process.env.GMAIL;
 const CLIENT_ID: string | undefined = process.env.CLIENT_ID;
 const CLIENT_SECRET: string | undefined = process.env.CLIENT_SECRET;
 const REDIRECT_URI: string | undefined = process.env.REDIRECT_URI;
 const REFRESH_TOKEN: string | undefined = process.env.REFRESH_TOKEN;
+
+if (!SECRET || !EXPIRES_IN) {
+    log.warn("Auth", "Lack of data in the environment");
+    process.exit(1);
+}
 
 if (!GMAIL || !CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI || !REFRESH_TOKEN) {
     log.warn("Auth.verifyMail", "Lack of data in the environment");
@@ -128,7 +133,7 @@ export default function (database: Record<string, Model<typeof db.define>>): Aut
                             message: "Invalid email or password"
                         });
                     } else {
-                        const token: string = jwt.sign({ email }, SECRET, { expiresIn: remember === "true" ? "30d" : EXPIRES_IN } as SignOptions);
+                        const token: string = jwt.sign({ email }, SECRET!, { expiresIn: remember === "true" ? "30d" : EXPIRES_IN } as SignOptions);
                         res.cookie("token", token, {
                             httpOnly: true,
                             secure: process.env.NODE_ENV === "production",
@@ -167,7 +172,7 @@ export default function (database: Record<string, Model<typeof db.define>>): Aut
                 });
             } else {
                 try {
-                    const decoded = jwt.verify(token, SECRET);
+                    const decoded = jwt.verify(token, SECRET!);
                     (req as any).user = decoded;
                     next();
                 } catch (error: any) {
@@ -185,7 +190,7 @@ export default function (database: Record<string, Model<typeof db.define>>): Aut
                 next();
             else {
                 try {
-                    jwt.verify(token, SECRET);
+                    jwt.verify(token, SECRET!);
                     res.status(201);
                     res.redirect("/user/dashboard");
                 } catch (error: any) {

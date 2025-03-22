@@ -33,8 +33,10 @@ function DOMContentLoaded() {
         try {
             const response = await fetch("/user/signup", {
                 method: "POST",
+                credentials: "include",
                 headers: { 
-                    "Content-Type": "application/x-www-form-urlencoded"
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Authorization": "Bearer " + localStorage.getItem("accessToken"),
                 },
                 body: new URLSearchParams(data)
             });
@@ -75,8 +77,10 @@ function DOMContentLoaded() {
         try {
             const response = await fetch("/user/verify-mail", {
                 method: "POST",
+                credentials: "include",
                 headers: { 
-                    "Content-Type": "application/x-www-form-urlencoded"
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Authorization": "Bearer " + localStorage.getItem("accessToken"),
                 },
                 body: new URLSearchParams({ email: email.value })
             });

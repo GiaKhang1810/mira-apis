@@ -5,7 +5,10 @@ import express, { Request, Response, Express, Router } from "express";
 import Cookie from "cookie-parser";
 import Cors from "cors";
 
+import authRequest, { AuthRequest } from "./controllers/authRequest";
+
 import RouterUser from "./routers/user";
+
 import utils, { Log } from "./utils";
 
 import db, { Model } from "./database/db";
@@ -26,6 +29,7 @@ import Cacher from "./models/Cacher";
     log.info("DataBase", "Connected to " + db.type + " database");
 
     const app: Express = express();
+    const requests: AuthRequest = authRequest();
     const routerUser: Router = RouterUser(database);
     const VIEWS_PATH: string = path.join(process.cwd(), "views");
     const RSCR_PATH: string = path.join(process.cwd(), "public");
@@ -40,12 +44,18 @@ import Cacher from "./models/Cacher";
     app.use(express.urlencoded({ extended: true }));
     app.use(express.json());
     app.use("/r", express.static(RSCR_PATH));
+    app.use(requests.sendToken);
 
     app.use("/user", routerUser);
 
     app.get("/", function (req: Request, res: Response): void {
         res.status(201);
         res.redirect("/user/signin");
+    });
+
+    app.use("/", function (req: Request, res: Response): void {
+        res.status(404);
+        res.render("end");
     });
 
     app.listen(PORT, (): void => log.info("Server", "Running on port " + PORT));
