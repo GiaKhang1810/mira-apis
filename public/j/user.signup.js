@@ -1,95 +1,137 @@
 function DOMContentLoaded() {
     const formSignup = document.querySelector("form");
-    const togglePassword = document.querySelector("#togglePassword");
-    const toggleConfirmPassword = document.querySelector("#toggleConfirmPassword");
+    const tPassword = document.querySelector("#togglePassword");
     const password = document.querySelector("#password");
-    const confirmPassword = document.querySelector("#confirmPassword");
+    const email = document.querySelector("#email");
+    const sendCode = document.querySelector("#sendCode");
+    const verifyCode = document.querySelector("#verifyCode");
     let isSubmitting = false;
+    let isClicking = false;
+    let step = 1;
+    let timer = null;
 
     async function formSignupSubmit(event) {
         event.preventDefault();
 
-        if (isSubmitting)
+        if (isSubmitting) 
             return;
 
-        if (password.value !== confirmPassword.value) {
-            alert("Passwords do not match");
+        isSubmitting = true;
+
+        if (step === 1) {
+            alert("Please get verification code");
+            isSubmitting = false;
             return;
         }
 
-        isSubmitting = true;
-        const formData = new URLSearchParams();
-        formData.append("email", formSignup.querySelector("#email").value);
-        formData.append("password", password.value);
-
-        var submitButton = formSignup.querySelector("button");
-        submitButton.disabled = true;
+        const data = {
+            email: email.value,
+            password: password.value,
+            verifyCode: verifyCode.value
+        }
 
         try {
-            const res = await fetch("/user/signup", {
+            const response = await fetch("/user/signup", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
+                headers: { 
+                    "Content-Type": "application/x-www-form-urlencoded"
                 },
-                body: formData
+                body: new URLSearchParams(data)
             });
 
-            if (!res.ok) {
-                const result = await res.json();
-                alert(result.message);
-                isSubmitting = false;
-                submitButton.disabled = false;
-                return;
-            }
+            const result = await response.json();
 
-            const resSignin = await fetch("/user/signin", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: formData
-            });
-
-            if (resSignin.ok)
-                window.location.href = "/user/dashboard";
-            else {
-                const result = await res.json();
+            if (result.success) {
+                alert("Sign up successful!");
+                window.location.href = "/user/signin";
+            } else {
                 alert(result.message);
             }
         } catch (error) {
             console.error(error);
-            formSignup.reset();
-            alert(error.message);
+            alert("An error occurred, please try again!");
         } finally {
-            submitButton.disabled = false;
             isSubmitting = false;
         }
     }
     formSignup.addEventListener("submit", formSignupSubmit);
 
-    togglePassword.addEventListener("click", function (e) {
+    async function sendVerifyCode(event) {
+        event.preventDefault();
+
+        if (isClicking) 
+            return;
+
+        if (!email.value) {
+            alert("Please enter your email first!");
+            return;
+        }
+
+        isClicking = true;
+        sendCode.disabled = true;
+        sendCode.textContent = "Sent (120s)";
+        let timeLeft = 120;
+
+        try {
+            const response = await fetch("/user/verify-mail", {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: new URLSearchParams({ email: email.value })
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                alert("Verification code sent to your email!");
+                step = 2;
+            } else {
+                alert(result.message);
+                resetSendButton();
+                return;
+            }
+        } catch (error) {
+            alert("An error occurred, please try again!");
+            resetSendButton();
+            return;
+        }
+
+        timer = setInterval(() => {
+            timeLeft--
+            sendCode.textContent = `Sent (${timeLeft}s)`;
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                resetSendButton();
+            }
+        }, 1000);
+    }
+
+    function resetSendButton() {
+        isClicking = false;
+        sendCode.disabled = false;
+        sendCode.textContent = "Send";
+    }
+
+    sendCode.addEventListener("click", sendVerifyCode);
+
+    tPassword.addEventListener("click", function () {
         var type = password.getAttribute("type") === "password" ? "text" : "password";
         password.setAttribute("type", type);
         this.classList.toggle("fa-eye-slash");
     });
 
-    toggleConfirmPassword.addEventListener("click", function (e) {
-        var type = confirmPassword.getAttribute("type") === "password" ? "text" : "password";
-        confirmPassword.setAttribute("type", type);
-        this.classList.toggle("fa-eye-slash");
-    });
-
     password.addEventListener("input", function () {
-        togglePassword.style.display = this.value ? "inline" : "none"
-    });
-    confirmPassword.addEventListener("input", function () {
-        toggleConfirmPassword.style.display = this.value ? "inline" : "none"
+        tPassword.style.display = this.value ? "inline" : "none";
     });
 
-    if (!confirmPassword.value)
-        toggleConfirmPassword.style.display = "none";
+    email.addEventListener("input", function () {
+        sendCode.style.display = this.value ? "inline" : "none";
+    });
 
-    if (!password.value)
-        togglePassword.style.display = "none";
+    if (!password.value) 
+        tPassword.style.display = "none";
+    if (!email.value) 
+        sendCode.style.display = "none";
 }
-document.addEventListener("DOMContentLoaded", DOMContentLoaded);
+
+document.addEventListener("DOMContentLoaded", DOMContentLoaded)

@@ -43,10 +43,12 @@ export class DataBase extends EventEmitter {
     private schemas: Record<string, Schema>;
     private sequelize?: Sequelize;
     private SQLite?: ModelCtor<ModelSeq<any, any>>;
+    public type: string;
 
     constructor(STORAGE: string) {
         super();
 
+        this.type = type;
         this.writeQueue = [];
         this.isWriting = false;
         this.models = {}
@@ -247,8 +249,27 @@ export class DataBase extends EventEmitter {
                     });
                 },
                 update: async (data: Record<string, any>): Promise<Array<T>> => {
-                    if (!this.validate(model, data))
-                        throw new Error("Validation failed");
+                    for (let key in schema) {
+                        const rule = schema[key] as ItemSchema;
+
+                        if (data[key] && rule.type !== getType(data[key])) {
+                            this.emit("error", {
+                                type: "ValidateData",
+                                message: `Duplicate data for field ${key}`
+                            });
+
+                            throw new Error("Validate failed");
+                        }
+
+                        if (rule.unique && this.read()[model].some(item => item[key] === data[key])) {
+                            this.emit("error", {
+                                type: "ValidateData",
+                                message: `Duplicate data for field ${key}`
+                            });
+
+                            throw new Error("Validate failed");
+                        }
+                    }
 
                     this.write((db: Models): Models => {
                         db[model] = db[model]?.map(item => ({
@@ -261,8 +282,27 @@ export class DataBase extends EventEmitter {
                     return this.read()[model];
                 },
                 updateOne: async (condition: Record<string, any>, data: Record<string, any>): Promise<T> => {
-                    if (!this.validate(model, data))
-                        throw new Error("Validation failed");
+                    for (let key in schema) {
+                        const rule = schema[key] as ItemSchema;
+
+                        if (data[key] && rule.type !== getType(data[key])) {
+                            this.emit("error", {
+                                type: "ValidateData",
+                                message: `Duplicate data for field ${key}`
+                            });
+
+                            throw new Error("Validate failed");
+                        }
+
+                        if (rule.unique && this.read()[model].some(item => item[key] === data[key])) {
+                            this.emit("error", {
+                                type: "ValidateData",
+                                message: `Duplicate data for field ${key}`
+                            });
+
+                            throw new Error("Validate failed");
+                        }
+                    }
 
                     let updatedItem: T | undefined;
                     this.write((db: Models): Models => {

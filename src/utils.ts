@@ -4,6 +4,13 @@ import chalk from "chalk";
 
 const ERROR_LOG: string = path.resolve(process.cwd(), "dist", "database", process.env.ERROR_LOG || "error.log");
 
+export interface Log {
+    info: (name: string, message: string) => void;
+    warn: (name: string, message: string) => void;
+    error: (name: string, error: Record<string, any>) => void;
+    wall: (len: number) => void;
+}
+
 export function getTime(format: string = "HH:mm:ss DD/MM/YYYY", cDate: Date = new Date()): string {
     const HH: string = String(cDate.getHours()).padStart(2, "0");
     const mm: string = String(cDate.getMinutes()).padStart(2, "0");
@@ -36,7 +43,7 @@ export function getTime(format: string = "HH:mm:ss DD/MM/YYYY", cDate: Date = ne
         });
 }
 
-export const log = {
+export const log: Log = {
     info: (name: string, message: string): void => {
         const time: string = getTime("[ HH:mm:ss | DD/MM/YYYY ]");
         console.log(chalk.green(time), name + ":", message);
@@ -48,19 +55,18 @@ export const log = {
     error: (name: string, error: Record<string, any>): void => {
         const time: string = getTime("[ HH:mm:ss | DD/MM/YYYY ]");
         console.log(chalk.red(time), name + ":", error.message);
-        const ErrorLog =
+        const ErrorLog: string =
             time +
             "\nError: " + error.name +
             "\nMessage: " + error.message +
             "\nStack: " + error.stack +
-            "\n" + "-".repeat(50);
+            "\n" + "-".repeat(50) + "\n";
 
         const isExist = fs.existsSync(ERROR_LOG);
-        if (!isExist) {
+        if (!isExist)
             fs.writeFileSync(ERROR_LOG, ErrorLog);
-        } else {
+        else
             fs.appendFileSync(ERROR_LOG, ErrorLog);
-        }
     },
     wall: (len: number = 15): void => console.log(chalk.blue("=".repeat(len)))
 }
@@ -69,7 +75,7 @@ export const getType = (data: unknown): string => Object.prototype.toString.call
 export const isEmail = (email: string): boolean => /^[\w.-]+@[a-zA-Z\d.-]+\.[a-zA-Z]{2,}$/.test(email);
 export const generateID = (len: number = 15): string => {
     let id = Date.now().toString();
-    while (id.length < len) 
+    while (id.length < len)
         id += Math.floor(Math.random() * 10);
 
     return id.slice(0, len);

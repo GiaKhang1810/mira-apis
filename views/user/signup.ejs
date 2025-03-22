@@ -35,10 +35,10 @@
                     <label>Password</label>
                 </div>
                 <div class="field">
-                    <input type="password" name="confirmPassword" id="confirmPassword" required>
+                    <input type="text" name="verifyCode" id="verifyCode" maxlength="6" inputmode="numeric" required>
                     <span id="icon_1" class="fas fa-lock"></span>
-                    <span class="fas fa-eye" id="toggleConfirmPassword" style="cursor: pointer;"></span>
-                    <label>Confirm Password</label>
+                    <button class="sendCode" id="sendCode" style="cursor: pointer;">Send</button>
+                    <label>Verification code</label>
                 </div>
                 <div class="accept">
                     <label for="accept">
@@ -46,7 +46,7 @@
                         <p>I Agree To <a href="/terms-conditions">The Terms And Conditions</a></p>
                     </label>
                 </div>
-                <button type="submit">Sign up</button>
+                <button class="sendClient" type="submit">Sign up</button>
             </form>
             <div class="signup-link">
                 <p>Already have an account? <a href="/user/signin">Sign in here</a></p>

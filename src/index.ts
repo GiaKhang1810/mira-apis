@@ -1,5 +1,4 @@
 import "dotenv/config";
-import "./database/db";
 
 import path from "path";
 import express, { Request, Response, Express, Router } from "express";
@@ -7,20 +6,30 @@ import Cookie from "cookie-parser";
 import Cors from "cors";
 
 import RouterUser from "./routers/user";
+import utils, { Log } from "./utils";
+
+import db, { Model } from "./database/db";
 import User from "./models/User";
-import { log } from "./utils";
+import Cacher from "./models/Cacher";
 
 !(async (): Promise<void> => {
     await User.sync();
+    await Cacher.sync();
+
+    const log: Log = utils.log;
+    const database: Record<string, Model<typeof db.define>> = {
+        User,
+        Cacher
+    }
 
     log.wall(30);
-    log.info("DataBase", "Connected to " + User.type() + " database");
+    log.info("DataBase", "Connected to " + db.type + " database");
 
     const app: Express = express();
-    const routerUser: Router = RouterUser(User);
+    const routerUser: Router = RouterUser(database);
     const VIEWS_PATH: string = path.join(process.cwd(), "views");
     const RSCR_PATH: string = path.join(process.cwd(), "public");
-    const PORT: string | number = process.env.PORT ?? 8000;
+    const PORT: string | number = process.env.PORT || 8000;
 
     app.set("view engine", "ejs");
     app.set("views", VIEWS_PATH);
@@ -39,5 +48,5 @@ import { log } from "./utils";
         res.redirect("/user/signin");
     });
 
-    app.listen(PORT, _ => log.info("Server", "Running on port " + PORT));
+    app.listen(PORT, (): void => log.info("Server", "Running on port " + PORT));
 })();

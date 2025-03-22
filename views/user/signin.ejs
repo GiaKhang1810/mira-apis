@@ -2,54 +2,54 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <meta name="author" content="Khang">
-  <meta name="keywords" content="mira, bot">
-  <title>Sign in | Mira</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
-    rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
-  <link rel="stylesheet" href="/r/c/user.signin.css">
-  <script src="/r/j/user.signin.js"></script>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="author" content="Khang">
+    <meta name="keywords" content="mira, bot">
+    <title>Sign in | Mira</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+    <link rel="stylesheet" href="/r/c/user.signin.css">
+    <script src="/r/j/user.signin.js"></script>
 </head>
 
 <body>
-  <main>
-    <div class="main-text">
-      <div class="text">Sign in</div>
-      <form>
-        <div class="field">
-          <input type="text" name="email" id="email" required>
-          <span id="icon_1" class="fas fa-user"></span>
-          <label>Email</label>
+    <main>
+        <div class="main-text">
+            <div class="text">Sign in</div>
+            <form>
+                <div class="field">
+                    <input type="text" name="email" id="email" required>
+                    <span id="icon_1" class="fas fa-user"></span>
+                    <label>Email</label>
+                </div>
+                <div class="field">
+                    <input type="password" name="password" id="password" required>
+                    <span id="icon_1" class="fas fa-lock"></span>
+                    <span class="fas fa-eye" id="togglePassword" style="cursor: pointer;"></span>
+                    <label>Password</label>
+                </div>
+                <div class="remember">
+                    <label for="remember">
+                        <input type="checkbox" id="remember">
+                        <p>Remember me</p>
+                    </label>
+                </div>
+                <button type="submit">Sign in</button>
+            </form>
+            <div class="signup-link">
+                <p>Don't have an account? <a href="/user/signup">Sign up here</a></p>
+            </div>
         </div>
-        <div class="field">
-          <input type="password" name="password" id="password" required>
-          <span id="icon_1" class="fas fa-lock"></span>
-          <span class="fas fa-eye" id="togglePassword" style="cursor: pointer;"></span>
-          <label>Password</label>
+        <div class="main-image">
+            <img src="/r/a/user.signin.png" alt="">
         </div>
-        <div class="remember">
-          <label for="remember">
-            <input type="checkbox" id="remember">
-            <p>Remember me</p>
-          </label>
-        </div>
-        <button type="submit">Sign in</button>
-      </form>
-      <div class="signup-link">
-        <p>Don"t have an account? <a href="/user/signup">Sign up here</a></p>
-      </div>
-    </div>
-    <div class="main-image">
-      <img src="/r/a/user.signin.png" alt="">
-    </div>
-  </main>
+    </main>
 </body>
 
 </html>
