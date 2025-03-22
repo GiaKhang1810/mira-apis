@@ -43,7 +43,7 @@ function DOMContentLoaded() {
 
             const result = await response.json();
 
-            if (result.ok) {
+            if (response.ok) {
                 alert("Sign up successful!");
                 window.location.href = "/user/signin";
             } else
