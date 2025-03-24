@@ -12,6 +12,7 @@ if (!INTERNAL_TOKEN_SECRET) {
 export interface AuthRequest {
     sendToken: (req: Request, res: Response, next: NextFunction) => void;
     verifyToken: (req: Request, res: Response, next: NextFunction) => void;
+    protectURLStatic: (req: Request, res: Response, next: NextFunction) => void;
 }
 
 export default function (): AuthRequest {
@@ -45,6 +46,16 @@ export default function (): AuthRequest {
                     res.render("forbidden");
                 }
             }
+        },
+        protectURLStatic: (req: Request, res: Response, next: NextFunction): void => {
+            const origin = req.get("Origin");
+            const referer = req.get("Referer");
+
+            if (!origin && !referer) {
+                res.status(403);
+                res.render("forbidden");
+            } else
+                next();
         }
     }
 }

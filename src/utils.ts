@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import chalk from "chalk";
+import request from "request";
 
 const dbCwd: string = path.resolve(process.cwd(), "database");
 

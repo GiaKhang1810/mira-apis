@@ -23,6 +23,7 @@
     "@types/axios": "^0.9.36",
     "@types/bcryptjs": "^2.4.6",
     "@types/chalk": "^0.4.31",
+    "@types/cheerio": "^0.22.35",
     "@types/cookie-parser": "^1.4.8",
     "@types/cors": "^2.8.17",
     "@types/dotenv": "^6.1.1",
@@ -31,6 +32,7 @@
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.13.10",
     "@types/nodemailer": "^6.4.17",
+    "@types/request": "^2.48.12",
     "@types/sequelize": "^4.28.20",
     "@types/sqlite3": "^3.1.11",
     "google-auth-library": "^9.15.1",
@@ -38,9 +40,11 @@
     "typescript": "^5.8.2"
   },
   "dependencies": {
+    "@distube/ytdl-core": "^4.16.5",
     "axios": "^1.8.1",
     "bcryptjs": "^3.0.2",
     "chalk": "^4.1.2",
+    "cheerio": "^1.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
@@ -48,6 +52,7 @@
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^6.10.0",
+    "request": "^2.88.2",
     "sequelize": "^6.37.6",
     "sqlite3": "^5.1.7"
   }
