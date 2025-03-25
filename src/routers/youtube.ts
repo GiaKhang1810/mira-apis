@@ -3,8 +3,6 @@ import db, { Model } from "../database/db";
 import authRequest, { AuthRequest } from "../controllers/authRequest";
 import { log } from "../utils";
 import axios from "axios";
-import ytdl from "@distube/ytdl-core";
-import { Readable } from "stream";
 
 const YOUTUBE_KEY: string | undefined = process.env.YOUTUBE_KEY;
 
@@ -80,8 +78,16 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
     const routers: Router = express.Router();
     const requests: AuthRequest = authRequest();
 
+    const getURLVideoID: (url: string) => string | undefined = (url: string): string | undefined => {
+        const match: string[] | null = url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+        return match ? match[1] : undefined;
+    }
+
     const getDetails: (url: string) => Promise<Details> = async (url: string): Promise<Details> => {
-        const videoID: string = ytdl.getURLVideoID(url);
+        const videoID: string | undefined = getURLVideoID(url);
+        if (!videoID)
+            throw new Error("Invalid Youtube URL");
+
         const api: string = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoID}&key=${YOUTUBE_KEY}`;
 
         const res = await axios.get<AxiosResponse>(api);
@@ -136,7 +142,7 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
             return;
         }
 
-        if (!ytdl.validateURL(url)) {
+        if (!getURLVideoID(url)) {
             res.status(400);
             res.json({
                 message: "Invalid Youtube URL"
@@ -177,7 +183,7 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
             return;
         }
 
-        if (!ytdl.validateURL(url)) {
+        if (!getURLVideoID(url)) {
             res.status(400);
             res.json({
                 message: "Invalid Youtube URL"
@@ -258,8 +264,6 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
             });
         }
     });
-
-    
 
     return routers;
 }

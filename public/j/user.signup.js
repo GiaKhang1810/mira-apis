@@ -70,7 +70,7 @@ function DOMContentLoaded() {
 
         isClicking = true;
         sendCode.disabled = true;
-        sendCode.textContent = "Sent (120s)";
+        sendCode.textContent = "120";
         let timeLeft = 120;
 
         try {
@@ -101,7 +101,7 @@ function DOMContentLoaded() {
 
         timer = setInterval(() => {
             timeLeft--
-            sendCode.textContent = `Sent (${timeLeft}s)`;
+            sendCode.textContent = timeLeft;
             if (timeLeft <= 0) {
                 clearInterval(timer);
                 resetSendButton();

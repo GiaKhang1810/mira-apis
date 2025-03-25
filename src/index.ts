@@ -9,6 +9,7 @@ import authRequest, { AuthRequest } from "./controllers/authRequest";
 
 import RouterUser from "./routers/user";
 import RouterYoutube from "./routers/youtube";
+import RouterFacebook from "./routers/facebook";
 
 import utils, { Log } from "./utils";
 
@@ -35,6 +36,7 @@ import Cacher from "./models/Cacher";
 
     const routerUser: Router = RouterUser(database);
     const routerYoutbe: Router = RouterYoutube(database);
+    const routerFacebook: Router = RouterFacebook(database);
 
     const VIEWS_PATH: string = path.join(process.cwd(), "views");
     const RSCR_PATH: string = path.join(process.cwd(), "public");
@@ -53,6 +55,7 @@ import Cacher from "./models/Cacher";
 
     app.use("/user", routerUser);
     app.use("/youtube", routerYoutbe);
+    app.use("/facebook", routerFacebook);
 
     app.get("/", function (req: Request, res: Response): void {
         res.status(201);

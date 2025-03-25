@@ -37,19 +37,20 @@ export default function (): AuthRequest {
             if (!token) {
                 res.status(403);
                 res.render("forbidden");
-            } else {
-                try {
-                    jwt.verify(token, INTERNAL_TOKEN_SECRET!);
-                    next();
-                } catch (error: any) {
-                    res.status(403);
-                    res.render("forbidden");
-                }
+                return;
+            }
+
+            try {
+                jwt.verify(token, INTERNAL_TOKEN_SECRET!);
+                next();
+            } catch (error: any) {
+                res.status(403);
+                res.render("forbidden");
             }
         },
         protectURLStatic: (req: Request, res: Response, next: NextFunction): void => {
-            const origin = req.get("Origin");
-            const referer = req.get("Referer");
+            const origin = req.get("Origin") as string;
+            const referer = req.get("Referer") as string;
 
             if (!origin && !referer) {
                 res.status(403);
