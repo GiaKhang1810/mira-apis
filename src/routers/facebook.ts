@@ -31,6 +31,11 @@ interface Headers {
     "User-Agent": string;
 }
 
+interface GetStoryID {
+    albumid: string;
+    storyid: string;
+}
+
 interface ItemThumbnail {
     id: string;
     height: number;
@@ -174,6 +179,7 @@ interface StoryDetails {
 export default function (database: Record<string, Model<typeof db.define>>): Router {
     const routers: Router = express.Router();
     const requests: AuthRequest = authRequest();
+    const isShareURL: (url: string) => boolean = (url: string): boolean => /^https:\/\/www\.facebook\.com\/share\/(p\/)?[\w\d]+\/?$/.test(url);
     const headers: Headers = {
         "Cookie": COOKIE_USER!,
         "Priority": "u=0, i",
@@ -190,6 +196,34 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
         "Sec-Fetch-User": "?1",
         "Upgrade-Insecure-Requests": "1",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
+    }
+
+    const getRedirectURL: (url: string) => Promise<string> = async (url: string): Promise<string> => {
+        const res = await axios.get<string>(url, {
+            headers,
+            maxRedirects: 0,
+            validateStatus: (status: number): boolean => status === 302
+        } as any);
+
+        const redirect: string = res.headers.location;
+
+        if (!redirect)
+            throw new Error("Can't get redirect url");
+
+        return redirect;
+    }
+
+    const getStoryID: (url: string) => GetStoryID | undefined = (url: string): GetStoryID | undefined => {
+        const regex = /^https:\/\/www\.facebook\.com\/stories\/([\d]+)\/([^\/?]+)/;
+        const match = url.match(regex);
+
+        if (!match)
+            return;
+
+        return {
+            albumid: match[1],
+            storyid: match[2]
+        }
     }
 
     const getToken: () => Promise<void> = async (): Promise<void> => {
@@ -367,19 +401,96 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
         }
     });
 
-    routers.get("/story", async (req: Request, res: Response): Promise<void> => {
-        const albumid = req.query.albumid as string;
-        const storyid = req.query.storyid as string;
-
-        if (!albumid || !storyid) {
-            res.status(400);
-            res.json({
-                message: "Missing 'albumid | storyid' in request query"
-            });
-            return;
-        }
+    routers.post("/story", async (req: Request, res: Response): Promise<void> => {
+        let storyid: string;
+        let albumid: string;
+        let url = req.body.url as string;
 
         try {
+            if (url) {
+                if (isShareURL(url))
+                    url = await getRedirectURL(url);
+
+                const info: GetStoryID | undefined = getStoryID(url);
+
+                if (!info) {
+                    res.status(400);
+                    res.json({
+                        message: "Invalid Story URL"
+                    });
+                    return;
+                }
+                albumid = info.albumid;
+                storyid = info.storyid;
+            } else {
+                albumid = req.body.albumid as string;
+                storyid = req.body.storyid as string;
+
+                if (!albumid || !storyid) {
+                    res.status(400);
+                    res.json({
+                        message: "Missing 'albumid | storyid' in request body"
+                    });
+                    return;
+                }
+            }
+
+            const storyID: string = Buffer.from(storyid, "base64").toString().split(":")[2];
+
+            if (!/\d+/.test(storyID) || !/\d+/.test(albumid)) {
+                res.status(400);
+                res.json({
+                    message: "Invalid Story or Album ID"
+                });
+                return;
+            }
+
+            const details: StoryDetails = await getStoryDetails(albumid, storyID);
+            res.status(200);
+            res.json(details);
+        } catch (error: any) {
+            log.error("Facebook.story", error);
+            res.status(500);
+            res.json({
+                message: "Server error, please try again later"
+            });
+        }
+    });
+
+    routers.get("/story", async (req: Request, res: Response): Promise<void> => {
+        let storyid: string;
+        let albumid: string;
+        let url = req.query.url as string;
+
+        try {
+            if (url) {
+                if (isShareURL(url))
+                    url = await getRedirectURL(url);
+
+                const info: GetStoryID | undefined = getStoryID(url);
+
+                if (!info) {
+                    res.status(400);
+                    res.json({
+                        message: "Invalid Story URL"
+                    });
+                    return;
+                }
+                albumid = info.albumid;
+                storyid = info.storyid;
+            } else {
+                albumid = req.query.albumid as string;
+                storyid = req.query.storyid as string;
+
+                if (!albumid || !storyid) {
+                    res.status(400);
+                    res.json({
+                        message: "Missing 'albumid | storyid' in request query"
+                    });
+                    return;
+                }
+            }
+
             const storyID: string = Buffer.from(storyid, "base64").toString().split(":")[2];
 
             if (!/\d+/.test(storyID) || !/\d+/.test(albumid)) {
