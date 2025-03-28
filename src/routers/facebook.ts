@@ -33,7 +33,7 @@ interface Headers {
 
 interface GetStoryID {
     albumid: string;
-    storyid: string | undefined;
+    storyid?: string;
 }
 
 interface ItemThumbnail {
@@ -214,16 +214,22 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
     }
 
     const getStoryID: (url: string) => GetStoryID | undefined = (url: string): GetStoryID | undefined => {
-        const regex = /^https:\/\/www\.facebook\.com\/(?:stories\/(\d+)\/([^\/?]+)|story\.php\?story_fbid=(\d+)&id=(\d+))/;
-        const match = url.match(regex);
-    
-        if (!match)
-            return;
-    
-        return {
-            albumid: match[1] || match[4],
-            storyid: match[2] || match[3]
-        }
+        const storyPhpRegex = /\/story\.php\?story_fbid=(\d+)&id=(\d+)/;
+        const storiesRegex = /\/stories\/(\d+)\/([^/?]+)?/;
+
+        let match;
+
+        if ((match = url.match(storyPhpRegex)))
+            return {
+                storyid: match[1],
+                albumid: match[2]
+            }
+
+        if ((match = url.match(storiesRegex)))
+            return {
+                albumid: match[1],
+                storyid: match[2]
+            }
     }
 
     const getToken: () => Promise<void> = async (): Promise<void> => {
