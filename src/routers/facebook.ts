@@ -1,6 +1,5 @@
 import express, { Request, Response, Router } from "express";
 import db, { Model } from "../database/db";
-import authRequest, { AuthRequest } from "../controllers/authRequest";
 import { log } from "../utils";
 import axios from "axios";
 
@@ -178,7 +177,6 @@ interface StoryDetails {
 
 export default function (database: Record<string, Model<typeof db.define>>): Router {
     const routers: Router = express.Router();
-    const requests: AuthRequest = authRequest(database);
     const isShareURL = (url: string): boolean => /^https:\/\/www\.facebook\.com\/share\/(p\/|r\/|v\/)?[\w\d]+\/?$/.test(url);
     const headers: Headers = {
         "Cookie": COOKIE_USER!,
@@ -357,7 +355,7 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
         }
     }
 
-    routers.post("/get-redirect", requests.verifyToken, async (req: Request, res: Response): Promise<void> => {
+    routers.post("/api/get-redirect", async (req: Request, res: Response): Promise<void> => {
         const url = req.body.url as string;
 
         if (!url) {
@@ -390,7 +388,7 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
         }
     });
 
-    routers.post("/watch", async (req: Request, res: Response): Promise<void> => {
+    routers.post("/api/watch", async (req: Request, res: Response): Promise<void> => {
         let id: string;
         let url = req.body.url as string;
 
@@ -434,7 +432,7 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
         }
     });
 
-    routers.get("/watch", async (req: Request, res: Response): Promise<void> => {
+    routers.get("/api/watch", async (req: Request, res: Response): Promise<void> => {
         let id: string;
         let url = req.query.url as string;
 
@@ -478,7 +476,7 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
         }
     });
 
-    routers.post("/story", async (req: Request, res: Response): Promise<void> => {
+    routers.post("/api/story", async (req: Request, res: Response): Promise<void> => {
         let storyid: string;
         let albumid: string;
         let url = req.body.url as string;
@@ -535,7 +533,7 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
         }
     });
 
-    routers.get("/story", async (req: Request, res: Response): Promise<void> => {
+    routers.get("/api/story", async (req: Request, res: Response): Promise<void> => {
         let storyid: string;
         let albumid: string;
         let url = req.query.url as string;

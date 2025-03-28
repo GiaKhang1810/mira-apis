@@ -131,7 +131,7 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
         });
     }
 
-    routers.post("/details", async (req: Request, res: Response): Promise<void> => {
+    routers.post("/api/details", async (req: Request, res: Response): Promise<void> => {
         const url = req.body.url as string;
 
         if (!url) {
@@ -172,7 +172,7 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
         }
     });
 
-    routers.get("/details", async (req: Request, res: Response): Promise<void> => {
+    routers.get("/api/details", async (req: Request, res: Response): Promise<void> => {
         const url = req.query.url as string;
 
         if (!url) {
@@ -213,7 +213,7 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
         }
     });
 
-    routers.post("/search", async (req: Request, res: Response): Promise<void> => {
+    routers.post("/api/search", async (req: Request, res: Response): Promise<void> => {
         const query = req.body.query as string;
         const lent = req.body.lent as string;
 
@@ -239,7 +239,7 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
         }
     });
 
-    routers.get("/search", async (req: Request, res: Response): Promise<void> => {
+    routers.get("/api/search", async (req: Request, res: Response): Promise<void> => {
         const query = req.query.query as string;
         const lent = req.query.lent as string;
 

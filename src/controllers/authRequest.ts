@@ -37,6 +37,7 @@ export default function (database: Record<string, Model<typeof db.define>>): Aut
             const token: string = req.cookies?.token || req.headers.authorization?.split(" ")[1];
 
             if (!token) {
+                res.clearCookie("token");
                 res.status(403);
                 res.render("forbidden");
                 return;
@@ -53,6 +54,7 @@ export default function (database: Record<string, Model<typeof db.define>>): Aut
                 const user: Record<string, any> | undefined = await User.findOne((item: Record<string, any>): boolean => item.accessToken === token);
 
                 if (!user) {
+                    res.clearCookie("token");
                     res.status(403);
                     res.render("forbidden");
                     return;
@@ -61,6 +63,7 @@ export default function (database: Record<string, Model<typeof db.define>>): Aut
                 (req as any).userID = user.userID;
                 next();
             } catch (error: any) {
+                res.clearCookie("token");
                 res.status(403);
                 res.render("forbidden");
             }

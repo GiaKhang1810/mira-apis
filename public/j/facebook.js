@@ -41,7 +41,7 @@ function DOMContentLoaded() {
 
         try {
             if (/facebook\.com\/share\//.test(facebookURL)) {
-                const res = await fetch("/facebook/get-redirect", {
+                const res = await fetch("/facebook/api/get-redirect", {
                     method: "POST",
                     credentials: "include",
                     headers: {
@@ -62,9 +62,9 @@ function DOMContentLoaded() {
             const isStory = /(?:\/story\.php\?story_fbid=\d+&id=\d+|\/stories\/\d+(?:\/[\w=]+|\?source=profile_highlight)?)/.test(facebookURL);
 
             if (isStory)
-                apiURL = "/facebook/story";
+                apiURL = "/facebook/api/story";
             else
-                apiURL = "/facebook/watch";
+                apiURL = "/facebook/api/watch";
 
             const res = await fetch(apiURL, {
                 method: "POST",

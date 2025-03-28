@@ -144,12 +144,18 @@ export default function (database: Record<string, Model<typeof db.define>>): Aut
                     return;
                 }
 
-                const token: string = jwt.sign({ email }, SECRET!, { expiresIn: remember === "true" ? "30d" : EXPIRES_IN } as SignOptions);
-                res.cookie("token", token, {
+                const tokenOptions: SignOptions = remember === "true" ? { expiresIn: "30d" } : {}
+                const token: string = jwt.sign({ email }, SECRET!, tokenOptions);
+
+                const cookieOptions: Record<string, any> = {
                     httpOnly: true,
                     secure: process.env.NODE_ENV === "production",
-                    maxAge: 24 * 60 * 60 * 1000
-                });
+                };
+
+                if (remember === "true")
+                    cookieOptions.maxAge = 30 * 24 * 60 * 60 * 1000; 
+
+                res.cookie("sitoken", token, cookieOptions);
 
                 res.status(200);
                 res.json({

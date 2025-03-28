@@ -21,7 +21,7 @@ function DOMContentLoaded() {
         submitButton.disabled = true;
 
         try {
-            const res = await fetch("/user/signin", {
+            const res = await fetch("/user/api/signin", {
                 method: "POST",
                 credentials: "include",
                 headers: { 

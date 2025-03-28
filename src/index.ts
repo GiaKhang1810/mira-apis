@@ -51,6 +51,7 @@ import Cacher from "./models/Cacher";
     app.use(express.urlencoded({ extended: true }));
     app.use(express.json());
     app.use("/r", requests.protectURLStatic, express.static(RSCR_PATH));
+    app.use("/:section/api", requests.verifyToken);
     app.use(requests.sendToken);
 
     app.use("/user", routerUser);
@@ -58,7 +59,13 @@ import Cacher from "./models/Cacher";
     app.use("/facebook", routerFacebook);
 
     app.get("/", function (req: Request, res: Response): void {
-        res.redirect(302, "/user/signin");
+        const token = req.cookies?.sitoken; 
+
+        if (token) {
+            res.redirect(302, "/user/dashboard"); 
+        } else {
+            res.redirect(302, "/user/signin"); 
+        }
     });
 
     app.use("*", function (req: Request, res: Response): void {

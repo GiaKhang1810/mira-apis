@@ -31,7 +31,7 @@ function DOMContentLoaded() {
         }
 
         try {
-            const response = await fetch("/user/signup", {
+            const response = await fetch("/user/api/signup", {
                 method: "POST",
                 credentials: "include",
                 headers: { 
@@ -74,7 +74,7 @@ function DOMContentLoaded() {
         let timeLeft = 120;
 
         try {
-            const response = await fetch("/user/verify-mail", {
+            const response = await fetch("/user/api/verify-mail", {
                 method: "POST",
                 credentials: "include",
                 headers: { 
