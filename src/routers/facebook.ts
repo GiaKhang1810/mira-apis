@@ -5,7 +5,13 @@ import axios from "axios";
 
 let token: string;
 const COOKIE_USER: string | undefined = process.env.COOKIE_USER;
-const fb_dtsg: string | undefined = process.env.FB_DTSG;
+let fb_dtsg: string | undefined;
+
+const refreshDTSG: () => void = (): void => {
+    fb_dtsg = process.env.FB_DTSG;
+}
+setInterval(refreshDTSG, 60 * 60 * 1000);
+refreshDTSG();
 
 if (!COOKIE_USER || !fb_dtsg) {
     log.warn("Facebook", "COOKIE_USER or FB_DTSG is not added to the environment");
