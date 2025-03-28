@@ -15,6 +15,7 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
     <link rel="stylesheet" href="/r/c/user.signup.css">
+    <script src="/r/j/reftoken.js"></script>
     <script src="/r/j/user.signup.js"></script>
 </head>
 
@@ -51,6 +52,7 @@
             <div class="signup-link">
                 <p>Already have an account? <a href="/user/signin">Sign in here</a></p>
             </div>
+            <input type="hidden" id="token" value="<%= token %>">
         </div>
         <div class="main-image">
             <img src="/r/a/user.signin.png" alt="">

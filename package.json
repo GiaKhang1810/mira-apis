@@ -4,7 +4,7 @@
   "description": "A simple server and client, providing convenient features for users",
   "main": "src/**/*.ts",
   "scripts": {
-    "start": "( (command -v clear >/dev/null && clear) || (command -v cls >/dev/null && cls) || node -e \"console.clear()\") && npx tsc && node dist/index.js"
+    "start": "((command -v clear >/dev/null && clear) || (command -v cls >/dev/null && cls) || node -e \"console.clear()\") && npx tsc && node dist/index.js"
   },
   "repository": {
     "type": "git",

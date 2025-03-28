@@ -18,23 +18,25 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
     });
 
     routers.get("/signin", auth.isSignin, function (req: Request, res: Response): void {
-        const token = req.cookies?.sitoken; 
+        const sitoken: string = req.cookies?.sitoken;
+        const token: string = (req as any).token;
 
-        if (token)
+        if (sitoken)
             res.redirect(302, "/user/dashboard"); 
 
         res.status(200);
-        res.render("user/signin");
+        res.render("user/signin", { token });
     });
 
     routers.get("/signup", auth.isSignin, function (req: Request, res: Response): void {
-        const token = req.cookies?.sitoken; 
+        const sitoken: string = req.cookies?.sitoken;
+        const token: string = (req as any).token;
 
-        if (token)
+        if (sitoken)
             res.redirect(302, "/user/dashboard"); 
 
         res.status(200);
-        res.render("user/signup");
+        res.render("user/signup", { token });
     });
 
     return routers;

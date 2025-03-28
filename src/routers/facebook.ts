@@ -212,8 +212,8 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
     }
 
     const getStoryID: (url: string) => GetStoryID | undefined = (url: string): GetStoryID | undefined => {
-        const storyPhpRegex = /\/story\.php\?story_fbid=(\d+)&id=(\d+)/;
-        const storiesRegex = /\/stories\/(\d+)\/([^/?]+)?/;
+        const storyPhpRegex: RegExp = /\/story\.php\?story_fbid=(\d+)&id=(\d+)/;
+        const storiesRegex: RegExp = /\/stories\/(\d+)\/([^/?]+)?/;
 
         let match;
 
@@ -397,7 +397,7 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
                 if (isShareURL(url))
                     url = await getRedirectURL(url);
 
-                const match: string[] | null = /videos\/(\d+)/g.exec(url) || /(\d+)/g.exec(url);
+                const match: RegExpMatchArray | null = /videos\/(\d+)/g.exec(url) || /(\d+)/g.exec(url);
 
                 if (!match) {
                     res.status(400);
@@ -441,7 +441,7 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
                 if (isShareURL(url))
                     url = await getRedirectURL(url);
 
-                const match: string[] | null = /videos\/(\d+)/g.exec(url) || /(\d+)/g.exec(url);
+                const match: RegExpMatchArray | null = /videos\/(\d+)/g.exec(url) || /(\d+)/g.exec(url);
 
                 if (!match) {
                     res.status(400);
@@ -591,8 +591,9 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
     });
 
     routers.get("/index.html", (req: Request, res: Response): void => {
+        const token: string = (req as any).token;
         res.status(200);
-        res.render("facebook/index");
+        res.render("facebook/index", { token });
     });
 
     routers.get("/", (req: Request, res: Response): void => {

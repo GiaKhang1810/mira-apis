@@ -8,7 +8,6 @@ import db, { Model } from "../database/db";
 import { log, generateID, isEmail } from "../utils";
 
 const SECRET: string | undefined = process.env.TOKEN_SECRET;
-const EXPIRES_IN: string | undefined = process.env.EXPIRES_IN;
 
 const GMAIL: string | undefined = process.env.GMAIL;
 const CLIENT_ID: string | undefined = process.env.CLIENT_ID;
@@ -16,7 +15,7 @@ const CLIENT_SECRET: string | undefined = process.env.CLIENT_SECRET;
 const REDIRECT_URI: string | undefined = process.env.REDIRECT_URI;
 const REFRESH_TOKEN: string | undefined = process.env.REFRESH_TOKEN;
 
-if (!SECRET || !EXPIRES_IN) {
+if (!SECRET) {
     log.warn("Auth", "Lack of data in the environment");
     process.exit(1);
 }
@@ -149,14 +148,14 @@ export default function (database: Record<string, Model<typeof db.define>>): Aut
 
                 const cookieOptions: Record<string, any> = {
                     httpOnly: true,
-                    secure: process.env.NODE_ENV === "production",
-                };
+                    secure: process.env.COOKIE_SECURE === "true",
+                    sameStrict: "strict"
+                }
 
                 if (remember === "true")
                     cookieOptions.maxAge = 30 * 24 * 60 * 60 * 1000; 
 
                 res.cookie("sitoken", token, cookieOptions);
-
                 res.status(200);
                 res.json({
                     message: "Signed in successfully",
