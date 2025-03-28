@@ -6,7 +6,7 @@ import authRequest, { AuthRequest } from "../controllers/authRequest";
 export default function (database: Record<string, Model<typeof db.define>>): Router {
     const routers: Router = express.Router();
     const auth: AuthUser = authUser(database);
-    const requests: AuthRequest = authRequest();
+    const requests: AuthRequest = authRequest(database);
 
     routers.post("/signin", requests.verifyToken, auth.signin);
     routers.post("/signup", requests.verifyToken, auth.signup);

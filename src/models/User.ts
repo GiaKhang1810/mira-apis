@@ -22,11 +22,11 @@ const User: Model<typeof db.define> = db.define("User", {
         required: true,
         unique: false
     },
-    apikey: {
-        type: "Object",
+    accessToken: {
+        type: "String",
         required: false,
-        unique: false,
-        defaultValue: {}
+        unique: true,
+        defaultValue: ""
     }
 });
 

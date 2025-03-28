@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import jwt, { SignOptions } from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import { log } from "../utils";
+import db, { Model } from "../database/db";
 
 const INTERNAL_TOKEN_SECRET: string | undefined = process.env.INTERNAL_TOKEN_SECRET;
 
@@ -15,7 +16,8 @@ export interface AuthRequest {
     protectURLStatic: (req: Request, res: Response, next: NextFunction) => void;
 }
 
-export default function (): AuthRequest {
+export default function (database: Record<string, Model<typeof db.define>>): AuthRequest {
+    const { User, Cacher } = database;
     const generateToken: () => string = (): string => jwt.sign({ anon: true }, INTERNAL_TOKEN_SECRET!, { expiresIn: "1m" });
 
     return {
@@ -31,7 +33,7 @@ export default function (): AuthRequest {
 
             next();
         },
-        verifyToken: (req: Request, res: Response, next: NextFunction): void => {
+        verifyToken: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
             const token: string = req.cookies?.token || req.headers.authorization?.split(" ")[1];
 
             if (!token) {
@@ -41,7 +43,22 @@ export default function (): AuthRequest {
             }
 
             try {
-                jwt.verify(token, INTERNAL_TOKEN_SECRET!);
+                const decoded = jwt.verify(token, INTERNAL_TOKEN_SECRET!) as JwtPayload;
+
+                if (decoded.anon === true) {
+                    next();
+                    return;
+                }
+
+                const user: Record<string, any> | undefined = await User.findOne((item: Record<string, any>): boolean => item.accessToken === token);
+
+                if (!user) {
+                    res.status(403);
+                    res.render("forbidden");
+                    return;
+                }
+
+                (req as any).userID = user.userID;
                 next();
             } catch (error: any) {
                 res.status(403);

@@ -76,7 +76,7 @@ interface Details {
 
 export default function (database: Record<string, Model<typeof db.define>>): Router {
     const routers: Router = express.Router();
-    const requests: AuthRequest = authRequest();
+    const requests: AuthRequest = authRequest(database);
 
     const getURLVideoID: (url: string) => string | undefined = (url: string): string | undefined => {
         const match: string[] | null = url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);

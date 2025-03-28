@@ -26,7 +26,7 @@ function DOMContentLoaded() {
                 credentials: "include",
                 headers: { 
                     "Content-Type": "application/x-www-form-urlencoded",
-                    "Authorization": "Bearer " + localStorage.getItem("accessToken"),
+                    "Authorization": "Bearer " + localStorage.getItem("accessToken")
                 },
                 body: new URLSearchParams(data)
             });

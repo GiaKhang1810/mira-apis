@@ -32,7 +32,7 @@ import Cacher from "./models/Cacher";
 
     const app: Express = express();
 
-    const requests: AuthRequest = authRequest();
+    const requests: AuthRequest = authRequest(database);
 
     const routerUser: Router = RouterUser(database);
     const routerYoutbe: Router = RouterYoutube(database);
@@ -58,8 +58,7 @@ import Cacher from "./models/Cacher";
     app.use("/facebook", routerFacebook);
 
     app.get("/", function (req: Request, res: Response): void {
-        res.status(201);
-        res.redirect("/user/signin");
+        res.redirect(302, "/user/signin");
     });
 
     app.use("*", function (req: Request, res: Response): void {

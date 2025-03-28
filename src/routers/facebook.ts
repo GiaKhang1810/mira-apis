@@ -33,7 +33,7 @@ interface Headers {
 
 interface GetStoryID {
     albumid: string;
-    storyid: string;
+    storyid: string | undefined;
 }
 
 interface ItemThumbnail {
@@ -178,8 +178,8 @@ interface StoryDetails {
 
 export default function (database: Record<string, Model<typeof db.define>>): Router {
     const routers: Router = express.Router();
-    const requests: AuthRequest = authRequest();
-    const isShareURL: (url: string) => boolean = (url: string): boolean => /^https:\/\/www\.facebook\.com\/share\/(p\/)?[\w\d]+\/?$/.test(url);
+    const requests: AuthRequest = authRequest(database);
+    const isShareURL = (url: string): boolean => /^https:\/\/www\.facebook\.com\/share\/(p\/|r\/|v\/)?[\w\d]+\/?$/.test(url);
     const headers: Headers = {
         "Cookie": COOKIE_USER!,
         "Priority": "u=0, i",
@@ -214,15 +214,15 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
     }
 
     const getStoryID: (url: string) => GetStoryID | undefined = (url: string): GetStoryID | undefined => {
-        const regex = /^https:\/\/www\.facebook\.com\/stories\/([\d]+)\/([^\/?]+)/;
+        const regex = /^https:\/\/www\.facebook\.com\/(?:stories\/(\d+)\/([^\/?]+)|story\.php\?story_fbid=(\d+)&id=(\d+))/;
         const match = url.match(regex);
-
+    
         if (!match)
             return;
-
+    
         return {
-            albumid: match[1],
-            storyid: match[2]
+            albumid: match[1] || match[4],
+            storyid: match[2] || match[3]
         }
     }
 
@@ -287,14 +287,14 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
         }
     }
 
-    const getStoryDetails: (albumID: string, storyID: string) => Promise<StoryDetails> = async (albumID: string, storyID: string): Promise<StoryDetails> => {
+    const getStoryDetails: (albumID: string, storyID: string | undefined) => Promise<StoryDetails> = async (albumID: string, storyID: string | undefined): Promise<StoryDetails> => {
         if (!/\d+/.test(albumID))
             throw new Error("albumid must be a numeric string");
 
         const data: URLSearchParams = new URLSearchParams({
             fb_dtsg: fb_dtsg!,
             variables: JSON.stringify({
-                bucketIDs: [albumID, storyID],
+                bucketIDs: storyID ? [albumID, storyID] : albumID,
                 scale: 1,
                 blur: 10,
                 shouldEnableArmadilloStoryReply: true,
@@ -351,18 +351,70 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
         }
     }
 
-    routers.post("/watch", async (req: Request, res: Response): Promise<void> => {
-        const id = req.body.id as string;
+    routers.post("/get-redirect", requests.verifyToken, async (req: Request, res: Response): Promise<void> => {
+        const url = req.body.url as string;
 
-        if (!id) {
+        if (!url) {
             res.status(400);
             res.json({
-                message: "Missing 'id' in request query"
+                message: "Missing 'url' in request body"
+            });
+            return;
+        }
+
+        if (!isShareURL(url)) {
+            res.status(400);
+            res.json({
+                message: "Just Support For Facebook Share URL"
             });
             return;
         }
 
         try {
+            const redirectURL: string = await getRedirectURL(url);
+
+            res.status(200);
+            res.json({ url: redirectURL });
+        } catch (error: any) {
+            log.error("Facebook.getRedirect", error);
+            res.status(500);
+            res.json({
+                message: "Server error, please try again later"
+            });
+        }
+    });
+
+    routers.post("/watch", async (req: Request, res: Response): Promise<void> => {
+        let id: string;
+        let url = req.body.url as string;
+
+        try {
+            if (url) {
+                if (isShareURL(url))
+                    url = await getRedirectURL(url);
+
+                const match: string[] | null = /videos\/(\d+)/g.exec(url) || /(\d+)/g.exec(url);
+
+                if (!match) {
+                    res.status(400);
+                    res.json({
+                        message: "Invalid Facebook URL"
+                    });
+
+                    return;
+                }
+                id = match[1];
+            } else
+                id = req.body.id as string;
+
+            if (!id) {
+                res.status(400);
+                res.json({
+                    message: "Missing 'id' in request body"
+                });
+                return;
+            }
+
             const details: VideoDetails = await getVideoDetails(id);
 
             res.status(200);
@@ -377,17 +429,36 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
     });
 
     routers.get("/watch", async (req: Request, res: Response): Promise<void> => {
-        const id = req.query.id as string;
-
-        if (!id) {
-            res.status(400);
-            res.json({
-                message: "Missing 'id' in request query"
-            });
-            return;
-        }
+        let id: string;
+        let url = req.query.url as string;
 
         try {
+            if (url) {
+                if (isShareURL(url))
+                    url = await getRedirectURL(url);
+
+                const match: string[] | null = /videos\/(\d+)/g.exec(url) || /(\d+)/g.exec(url);
+
+                if (!match) {
+                    res.status(400);
+                    res.json({
+                        message: "Invalid Facebook URL"
+                    });
+
+                    return;
+                }
+                id = match[1];
+            } else
+                id = req.query.id as string;
+
+            if (!id) {
+                res.status(400);
+                res.json({
+                    message: "Missing 'id' in request query"
+                });
+                return;
+            }
+
             const details: VideoDetails = await getVideoDetails(id);
 
             res.status(200);
@@ -421,23 +492,24 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
                     return;
                 }
                 albumid = info.albumid;
-                storyid = info.storyid;
+
+                if (info.storyid)
+                    storyid = info.storyid;
             } else {
                 albumid = req.body.albumid as string;
                 storyid = req.body.storyid as string;
 
-                if (!albumid || !storyid) {
+                if (!albumid) {
                     res.status(400);
                     res.json({
-                        message: "Missing 'albumid | storyid' in request body"
+                        message: "Missing 'albumid' in request body"
                     });
                     return;
                 }
             }
+            const storyID: string | undefined = storyid! ? Buffer.from(storyid, "base64").toString().split(":")[2] : undefined;
 
-            const storyID: string = Buffer.from(storyid, "base64").toString().split(":")[2];
-
-            if (!/\d+/.test(storyID) || !/\d+/.test(albumid)) {
+            if (storyid! && !/\d+/.test(storyID!) || !/\d+/.test(albumid)) {
                 res.status(400);
                 res.json({
                     message: "Invalid Story or Album ID"
@@ -477,23 +549,24 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
                     return;
                 }
                 albumid = info.albumid;
-                storyid = info.storyid;
+
+                if (info.storyid)
+                    storyid = info.storyid;
             } else {
                 albumid = req.query.albumid as string;
                 storyid = req.query.storyid as string;
 
-                if (!albumid || !storyid) {
+                if (!albumid) {
                     res.status(400);
                     res.json({
-                        message: "Missing 'albumid | storyid' in request query"
+                        message: "Missing 'albumid' in request query"
                     });
                     return;
                 }
             }
+            const storyID: string | undefined = storyid! ? Buffer.from(storyid, "base64").toString().split(":")[2] : undefined;
 
-            const storyID: string = Buffer.from(storyid, "base64").toString().split(":")[2];
-
-            if (!/\d+/.test(storyID) || !/\d+/.test(albumid)) {
+            if (storyid! && !/\d+/.test(storyID!) || !/\d+/.test(albumid)) {
                 res.status(400);
                 res.json({
                     message: "Invalid Story or Album ID"
@@ -511,6 +584,15 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
                 message: "Server error, please try again later"
             });
         }
+    });
+
+    routers.get("/index.html", (req: Request, res: Response): void => {
+        res.status(200);
+        res.render("facebook/index");
+    });
+
+    routers.get("/", (req: Request, res: Response): void => {
+        res.redirect(302, "/facebook/index.html");
     });
 
     return routers;
