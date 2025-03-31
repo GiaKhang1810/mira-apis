@@ -1,159 +1,91 @@
-# 📌 Mira APIs - Tài Liệu API
+# Mira APIs
 
-## 🚀 Giới thiệu
-Mira APIs cung cấp các endpoint cho các tính năng như đăng ký, đăng nhập, xác thực token, và xử lý dữ liệu. Tất cả các API yêu cầu sử dụng token để truy cập.
+## Giới thiệu
 
-## 📌 Cấu hình môi trường
-Trước khi chạy, bạn cần thiết lập các biến môi trường trong tệp `.env`:
+**Mira APIs** là một tập hợp các API mạnh mẽ, hỗ trợ quản lý và mở rộng ứng dụng một cách linh hoạt. Dự án được thiết kế để dễ dàng tích hợp và cung cấp hiệu suất cao.
+
+## Tính năng
+
+- **Dễ dàng tích hợp**: Hỗ trợ mở rộng linh hoạt với cấu trúc rõ ràng.
+- **Hiệu suất cao**: Được tối ưu để xử lý nhanh chóng.
+- **Bảo mật**: Sử dụng các cơ chế bảo mật để bảo vệ dữ liệu.
+- **Tự động cập nhật `fb_dtsg`**: Lấy và cập nhật `fb_dtsg` định kỳ mà không ghi đè toàn bộ tệp cấu hình.
+
+## Cài đặt
+
+### 1. Sao chép kho lưu trữ
+
+```bash
+git clone https://github.com/GiaKhang1810/mira-apis.git
+```
+
+### 2. Di chuyển vào thư mục dự án
+
+```bash
+cd mira-apis
+```
+
+### 3. Cài đặt các thư viện cần thiết
+
+```bash
+npm install
+```
+
+## Cấu hình môi trường
+
+Dự án sử dụng tệp `.env` để lưu trữ cấu hình. Để khởi tạo, bạn có thể tạo tệp `.env` và điền các giá trị sau:
 
 ```env
+# Cookie người dùng (dùng để lấy fb_dtsg)
+COOKIE_USER=your_cookie_here
+
+# Mã fb_dtsg (sẽ được cập nhật tự động)
+FB_DTSG=your_fb_dtsg_here
+
+# Cấu hình cơ sở dữ liệu
+DATABASE_URL=your_database_url
+
+# Cổng chạy server
 PORT=3000
-INTERNAL_TOKEN_SECRET=your_secret_key
 ```
 
-## 🔑 Xác thực
-Mira APIs sử dụng **JWT Token** để xác thực người dùng. Token được gửi dưới dạng cookie `token`.
+Ứng dụng có cơ chế tự động cập nhật `fb_dtsg` nhưng không làm mất các dòng khác hoặc comment trong `.env`.
 
----
+## Sử dụng
 
-## 📜 Danh sách API
+### Khởi động ứng dụng
 
-### 1️⃣ Đăng ký tài khoản
-**Endpoint:**
-```
-POST /user/signup
+```bash
+npm start
 ```
 
-**Request Body:**
-```json
-{
-  "username": "example",
-  "password": "mypassword"
-}
-```
+Ứng dụng sẽ chạy tại `http://localhost:3000`, trừ khi bạn thay đổi `PORT` trong `.env`.
 
-**Response:**
-```json
-{
-  "message": "User created successfully",
-  "token": "eyJhbGciOiJI..."
-}
-```
+## Cơ chế tự động cập nhật `fb_dtsg`
 
-📌 *Token sẽ được lưu trong cookie `token`.*
+Ứng dụng sẽ tự động gửi request đến Facebook để lấy `fb_dtsg`, sau đó cập nhật `.env` mà không ghi đè toàn bộ file. Cách hoạt động:
 
----
+1. **Gửi request đến Facebook** để lấy mã `fb_dtsg` mới.
+2. **Lấy và cập nhật cookie** để đảm bảo phiên làm việc hợp lệ.
+3. **Cập nhật `.env`** mà không làm mất các dòng khác.
+4. **Chạy định kỳ** mỗi 24 giờ để làm mới `fb_dtsg`.
 
-### 2️⃣ Đăng nhập
-**Endpoint:**
-```
-POST /user/login
-```
+## Đóng góp
 
-**Request Body:**
-```json
-{
-  "username": "example",
-  "password": "mypassword"
-}
-```
+Chúng tôi hoan nghênh mọi đóng góp từ cộng đồng. Nếu bạn muốn đóng góp, vui lòng:
 
-**Response:**
-```json
-{
-  "message": "Login successful",
-  "token": "eyJhbGciOiJI..."
-}
-```
+1. **Fork** dự án.
+2. **Tạo một nhánh mới** với các thay đổi của bạn.
+3. **Gửi pull request** để được xem xét.
 
-📌 *Token sẽ được gửi dưới dạng cookie `token`.*
+## Giấy phép
 
----
+Dự án này được cấp phép theo **MIT License**. Vui lòng xem tệp `LICENSE` để biết thêm chi tiết.
 
-### 3️⃣ Kiểm tra xác thực
-**Endpoint:**
-```
-GET /user/auth
-```
+## Liên hệ
 
-**Headers:**
-```
-Cookie: token=your_token
-```
+- **Tác giả**: Gia Khang
+- **Email**: ngkhang9a5lqc11@gmail.com
+- **Facebook**: [Gia Khang](https://www.facebook.com/GiaKhang.1810)
 
-**Response (Nếu hợp lệ):**
-```json
-{
-  "message": "Authenticated"
-}
-```
-
-**Response (Nếu không hợp lệ):**
-```json
-{
-  "error": "Invalid token"
-}
-```
-
----
-
-### 4️⃣ Cập nhật thông tin người dùng
-**Endpoint:**
-```
-PUT /user/update
-```
-
-**Headers:**
-```
-Cookie: token=your_token
-```
-
-**Request Body:**
-```json
-{
-  "email": "newemail@example.com",
-  "phone": "0123456789"
-}
-```
-
-**Response:**
-```json
-{
-  "message": "User updated successfully"
-}
-```
-
----
-
-### 5️⃣ Đăng xuất
-**Endpoint:**
-```
-POST /user/logout
-```
-
-**Response:**
-```json
-{
-  "message": "Logged out successfully"
-}
-```
-
-📌 *Token trong cookie sẽ bị xóa.*
-
----
-
-## 🛠️ Lỗi phổ biến
-| Mã lỗi | Mô tả |
-|--------|---------------------------------|
-| 400    | Thiếu trường bắt buộc |
-| 401    | Token không hợp lệ hoặc hết hạn |
-| 403    | Không có quyền truy cập |
-| 500    | Lỗi server |
-
----
-
-## 🎯 Ghi chú
-- Mọi yêu cầu API **phải** gửi kèm token.
-- Token chỉ có hiệu lực **1 phút**, nên cần refresh token.
-
-📌 *Liên hệ: [Github Mira APIs](https://github.com/GiaKhang1810/mira-apis)*
+Nếu bạn có bất kỳ câu hỏi hoặc góp ý nào, hãy liên hệ với chúng tôi!

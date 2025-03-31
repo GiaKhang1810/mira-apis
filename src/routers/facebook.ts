@@ -2,6 +2,20 @@ import express, { Request, Response, Router } from "express";
 import db, { Model } from "../database/db";
 import { log } from "../utils";
 import axios from "axios";
+import {
+    Headers,
+    GetStoryID,
+    VideoDetails,
+    AxiosStoryDetails,
+    AxiosVideoResponse,
+    ItemThumbnail,
+    StoryDetails,
+    FirstStory,
+    StoryEdges,
+    StoryMedia,
+    StoryCard,
+    StoryRepresentations
+} from "../types/facebook";
 
 let token: string;
 const COOKIE_USER: string | undefined = process.env.COOKIE_USER;
@@ -9,6 +23,10 @@ let fb_dtsg: string | undefined;
 
 const refreshDTSG: () => void = (): void => {
     fb_dtsg = process.env.FB_DTSG;
+    if (!fb_dtsg) {
+        log.warn("Facebook", "FB_DTSG is not added to the environment");
+        process.exit(1);
+    }
 }
 setInterval(refreshDTSG, 60 * 60 * 1000);
 refreshDTSG();
@@ -16,169 +34,6 @@ refreshDTSG();
 if (!COOKIE_USER || !fb_dtsg) {
     log.warn("Facebook", "COOKIE_USER or FB_DTSG is not added to the environment");
     process.exit(1);
-}
-
-interface Headers {
-    "Cookie": string;
-    "Priority": string;
-    "Origin": string;
-    "Sec-Ch-Ua": string;
-    "Sec-Ch-Ua-Full-Version-List": string;
-    "Sec-Ch-Ua-Mobile": string;
-    "Sec-Ch-Ua-Model": string;
-    "Sec-Ch-Ua-Platform": string;
-    "Sec-Ch-Ua-Platform-Version": string;
-    "Sec-Fetch-Dest": string;
-    "Sec-Fetch-Mode": string;
-    "Sec-Fetch-Site": string;
-    "Sec-Fetch-User": string;
-    "Upgrade-Insecure-Requests": string;
-    "User-Agent": string;
-}
-
-interface GetStoryID {
-    albumid: string;
-    storyid?: string;
-}
-
-interface ItemThumbnail {
-    id: string;
-    height: number;
-    width: number;
-    uri: string;
-}
-
-interface AxiosVideoResponse {
-    id: string;
-    description: string;
-    created_time: string;
-    source: string;
-    thumbnails: {
-        data: Array<ItemThumbnail>
-    };
-    reactions: {
-        summary: {
-            total_count: number;
-        };
-    };
-    comments: {
-        summary: {
-            total_count: number;
-        };
-    };
-    from: {
-        name: string;
-        id: string;
-    };
-}
-
-interface VideoDetails {
-    videoID: string;
-    userID: string;
-    author: string;
-    desc: string;
-    publishedAt: string;
-    reactCount: number;
-    commentCount: number;
-    url: string;
-    thumbnails: Array<ItemThumbnail>
-}
-
-interface StoryRepresentations {
-    width: number;
-    height: number;
-    base_url: string;
-    mime_type: string;
-}
-
-interface PrefetchRepresentations {
-    representations: Array<StoryRepresentations>;
-}
-
-interface StoryOwner {
-    id: string;
-    name: string;
-}
-
-interface StoryMedia {
-    blurred_image: {
-        uri: string;
-    };
-    preferred_thumbnail: {
-        image: {
-            uri: string;
-        };
-    };
-    previewImage: {
-        uri: string;
-    };
-    image: {
-        height: number;
-        width: number;
-    };
-    title: {
-        text: string;
-    };
-    publish_time: number;
-    videoDeliveryLegacyFields: {
-        browser_native_hd_url: string;
-        browser_native_sd_url: string;
-    };
-}
-
-interface StoryAttachment {
-    media: StoryMedia;
-}
-
-interface StoryCard {
-    feedback_summary: {
-        total_reaction_count: number;
-    };
-    story_thumbnail: {
-        uri: string;
-    };
-}
-
-interface StoryEdges {
-    attachments: [StoryAttachment];
-    story_card_info: StoryCard;
-}
-
-interface FirstStory {
-    owner: StoryOwner;
-    unified_stories: {
-        edges: [{ node: StoryEdges }];
-    };
-}
-
-interface AxiosStoryDetails {
-    data: {
-        nodes: [FirstStory];
-    };
-    extensions: {
-        all_video_dash_prefetch_representations: [PrefetchRepresentations];
-    };
-}
-
-interface StoryDetails {
-    userID: string;
-    name: string;
-    title: string;
-    publishedAt: number;
-    height: number;
-    width: number;
-    url: {
-        hd: string;
-        sd: string;
-    };
-    images: {
-        blurred: string;
-        preferred: string;
-        preview: string;
-        thumbnail: string;
-    };
-    reactCount: number;
-    other_url: StoryRepresentations[];
 }
 
 export default function (database: Record<string, Model<typeof db.define>>): Router {
@@ -596,14 +451,14 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
         }
     });
 
-    routers.get("/index.html", (req: Request, res: Response): void => {
+    routers.get("/main", (req: Request, res: Response): void => {
         const token: string = (req as any).token;
         res.status(200);
         res.render("facebook/index", { token });
     });
 
     routers.get("/", (req: Request, res: Response): void => {
-        res.redirect(302, "/facebook/index.html");
+        res.redirect(302, "/facebook/main");
     });
 
     return routers;

@@ -3,75 +3,19 @@ import db, { Model } from "../database/db";
 import authRequest, { AuthRequest } from "../controllers/authRequest";
 import { log } from "../utils";
 import axios from "axios";
+import {
+    Details,
+    AxiosResponse,
+    ItemsDetailsResponse,
+    DetailsSnippet,
+    DetailsStatistics
+} from "../types/youtube";
 
 const YOUTUBE_KEY: string | undefined = process.env.YOUTUBE_KEY;
 
 if (!YOUTUBE_KEY) {
     log.warn("Youtube", "YOUTUBE_KEY is not added to the environment");
     process.exit(1);
-}
-
-interface PageInfo {
-    totalResults: number;
-    resultsPerPage: number;
-}
-
-interface ItemThumbnail {
-    url: string;
-    width: number;
-    height: number;
-}
-
-interface Thumbnails {
-    default: ItemThumbnail;
-    medium: ItemThumbnail;
-    high: ItemThumbnail;
-    standard?: ItemThumbnail;
-    maxres?: ItemThumbnail;
-}
-
-interface DetailsSnippet {
-    publishedAt: string;
-    channelId: string;
-    channelTitle: string;
-    title: string;
-    description: string;
-    thumbnails: Thumbnails;
-    tags: string[];
-}
-
-interface DetailsStatistics {
-    viewCount: string;
-    likeCount: string;
-    favoriteCount: string;
-    commentCount: string;
-}
-
-interface ItemsDetailsResponse {
-    id: { videoId: string } | string;
-    snippet: DetailsSnippet;
-    statistics: DetailsStatistics;
-}
-
-interface AxiosResponse {
-    kind: string;
-    etag: string;
-    items: Array<ItemsDetailsResponse>;
-    pageInfo: PageInfo;
-}
-
-interface Details {
-    videoID: string;
-    title: string;
-    channel: string;
-    desc: string;
-    publishedAt: string;
-    thumbnails: Thumbnails;
-    viewCount?: string;
-    likeCount?: string;
-    favoriteCount?: string;
-    commentCount?: string;
-    url?: string;
 }
 
 export default function (database: Record<string, Model<typeof db.define>>): Router {

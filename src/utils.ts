@@ -2,6 +2,12 @@ import fs from "fs";
 import path from "path";
 import chalk from "chalk";
 import request from "request";
+import {
+    Log,
+    GetType,
+    GenerateID,
+    IsEmail
+} from "./types/utils";
 
 const dbCwd: string = path.resolve(process.cwd(), "database");
 
@@ -10,11 +16,11 @@ if (!fs.existsSync(dbCwd))
 
 const ERROR_LOG: string = path.resolve(dbCwd, process.env.ERROR_LOG || "error.log");
 
-export interface Log {
-    info: (name: string, message: string) => void;
-    warn: (name: string, message: string) => void;
-    error: (name: string, error: Record<string, any>) => void;
-    wall: (len: number) => void;
+export type {
+    Log,
+    GetType,
+    GenerateID,
+    IsEmail
 }
 
 export function getTime(format: string = "HH:mm:ss DD/MM/YYYY", cDate: Date = new Date()): string {
@@ -77,9 +83,9 @@ export const log: Log = {
     wall: (len: number = 15): void => console.log(chalk.blue("=".repeat(len)))
 }
 
-export const getType = (data: unknown): string => Object.prototype.toString.call(data).slice(8, -1);
-export const isEmail = (email: string): boolean => /^[\w.-]+@[a-zA-Z\d.-]+\.[a-zA-Z]{2,}$/.test(email);
-export const generateID = (len: number = 15): string => {
+export const getType: GetType = (data: any): string => Object.prototype.toString.call(data).slice(8, -1);
+export const isEmail: IsEmail = (email: string): boolean => /^[\w.-]+@[a-zA-Z\d.-]+\.[a-zA-Z]{2,}$/.test(email);
+export const generateID: GenerateID = (len: number = 15): string => {
     let id = Date.now().toString();
     while (id.length < len)
         id += Math.floor(Math.random() * 10);

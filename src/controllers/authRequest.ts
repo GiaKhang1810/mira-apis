@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { log } from "../utils";
 import db, { Model } from "../database/db";
+import { AuthRequest, GenerateToken } from "../types/authRequest";
 
 const INTERNAL_TOKEN_SECRET: string | undefined = process.env.INTERNAL_TOKEN_SECRET;
 
@@ -10,16 +11,13 @@ if (!INTERNAL_TOKEN_SECRET) {
     process.exit(1);
 }
 
-export interface AuthRequest {
-    sendToken: (req: Request, res: Response, next: NextFunction) => void;
-    verifyToken: (req: Request, res: Response, next: NextFunction) => void;
-    protectURLStatic: (req: Request, res: Response, next: NextFunction) => void;
-    refreshToken: (req: Request, res: Response) => void;
+export type {
+    AuthRequest
 }
 
 export default function (database: Record<string, Model<typeof db.define>>): AuthRequest {
     const { User, Cacher } = database;
-    const generateToken: () => string = (): string => jwt.sign({ anon: true }, INTERNAL_TOKEN_SECRET!, { expiresIn: "5m" });
+    const generateToken: GenerateToken = (): string => jwt.sign({ anon: true }, INTERNAL_TOKEN_SECRET!, { expiresIn: "5m" });
 
     return {
         refreshToken: (req: Request, res: Response): void => {

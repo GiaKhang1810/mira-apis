@@ -1,8 +1,33 @@
+function OnClickLiID(id) {
+    let path;
+
+    switch (id) {
+        case "home":
+            path = "/";
+            break;
+        case "docs":
+            path = "/facebook/docs";
+            break;
+        case "post-dl":
+            path = "/facebook/post";
+            break;
+        case "get-user":
+            path = "/facebook/info";
+            break;
+    }
+
+    window.location.href = path;
+}
+
 function DOMContentLoaded() {
     let isSubmitting = false;
     const formDownloader = document.querySelector("form");
     const resultContainer = document.querySelector(".result-container");
     const fetchBtn = document.querySelector("#fetchBtn");
+    const menuBtn = document.querySelector(".menu-btn");
+    const sidebar = document.querySelector(".sidebar");
+
+    const menuClick = _ => sidebar.classList.toggle("active");
 
     function isValidURL(url) {
         const regexPatterns = {
@@ -10,7 +35,7 @@ function DOMContentLoaded() {
             reel: /^https?:\/\/(www\.)?facebook\.com\/reel\/\w+\/?$/,
             story: /^https?:\/\/(www\.)?facebook\.com\/stories\/\d+\/(?:[\w=]+.*|\?source=profile_highlight)$/,
             storyLegacy: /^https?:\/\/(www\.)?facebook\.com\/story\.php\?story_fbid=\d+&id=\d+$/,
-            share: /^https?:\/\/(www\.)?facebook\.com\/share\/\w+\/?$/,
+            share: /^https?:\/\/(www\.)?facebook\.com\/share(?:\/[rpv]\/\w+)?\/?$/,
             video: /^https?:\/\/(www\.)?facebook\.com\/[^/]+\/videos\/\w+\/?$/,
             fbWatch: /^https?:\/\/fb\.watch\/\w+\/?$/
         }
@@ -81,25 +106,7 @@ function DOMContentLoaded() {
 
             const result = await res.json();
 
-            resultContainer.innerHTML = `
-                <div class="video-result">
-                    <div class="thumbnail">
-                        <img src="${isStory ? result.images.thumbnail : result.thumbnails[0].uri}" alt="Thumbnail">
-                        <div class="author">${isStory ? result.name : result.author}</div>
-                    </div>
-                    <div class="video-info">
-                        <h2 class="title">${isStory ? "Story" : result.desc}</h2>
-                        <div class="download-buttons">
-                            <a href="${isStory ? result.url.hd : result.url}" class="download-btn" download>
-                                <i class="fas fa-download"></i> Download HD
-                            </a>
-                            <a href="${isStory ? result.url.sd : result.url}" class="download-btn" download>
-                                <i class="fas fa-download"></i> Download SD
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            `;
+            resultContainer.innerHTML = `<div class="video-result"><div class="thumbnail"><img src="${isStory ? result.images.thumbnail : result.thumbnails[0].uri}" alt="${isStory ? result.name : result.author}"><div class="author">${isStory ? result.name : result.author}</div></div><div class="video-info"><h2 class="title">${isStory ? "Story" : "Watch"}</h2><div class="download-buttons"><a href="${isStory ? result.url.hd : result.url}" class="download-btn" download><i class="fas fa-download"></i> Download HD</a><a href="${isStory ? result.url.sd : result.url}" class="download-btn" download><i class="fas fa-download"></i> Download SD</a>` + (result.other_url ? `<a href="${result.other_url.find(item => item.height === 1280 && item.width === 720).base_url}" class="download-btn" download><i class="fas fa-download"></i> Download Without Sound</a><a href="${result.other_url.find(item => item.mime_type === "audio/mp4").base_url}" class="download-btn" download><i class="fas fa-download"></i> Download Audio</a>` : ``) + `</div></div></div>`;
         } catch (error) {
             console.error(error);
             resultContainer.innerHTML = `<p style="color:red; text-align:center;">${error.message}</p>`;
@@ -110,6 +117,7 @@ function DOMContentLoaded() {
         }
     }
 
+    menuBtn.addEventListener("click", menuClick);
     formDownloader.addEventListener("submit", formDownloaderScript);
 }
 

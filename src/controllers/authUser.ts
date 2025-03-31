@@ -6,6 +6,7 @@ import jwt, { SignOptions } from "jsonwebtoken";
 import crypt from "bcryptjs";
 import db, { Model } from "../database/db";
 import { log, generateID, isEmail } from "../utils";
+import { AuthUser } from "../types/authUser";
 
 const SECRET: string | undefined = process.env.TOKEN_SECRET;
 
@@ -28,13 +29,8 @@ if (!GMAIL || !CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI || !REFRESH_TOKEN) {
 const client: OAuth2Client = new OAuth2Client(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
 client.setCredentials({ refresh_token: REFRESH_TOKEN });
 
-export interface AuthUser {
-    signin: (req: Request, res: Response) => Promise<void>;
-    signup: (req: Request, res: Response) => Promise<void>;
-    signout: (req: Request, res: Response) => Promise<void>;
-    verify: (req: Request, res: Response, next: NextFunction) => Promise<void>;
-    isSignin: (req: Request, res: Response, next: NextFunction) => Promise<void>;
-    verifyMail: (req: Request, res: Response) => Promise<void>;
+export type {
+    AuthUser
 }
 
 export default function (database: Record<string, Model<typeof db.define>>): AuthUser {
@@ -96,7 +92,7 @@ export default function (database: Record<string, Model<typeof db.define>>): Aut
                 const allUser: Array<Record<string, any>> = await User.findAll();
 
                 do {
-                    userID = generateID();
+                    userID = generateID(15);
                 } while (allUser.some((item: Record<string, any>): boolean => item.userID === userID));
 
                 const newUser: Record<string, any> = await User.create({
