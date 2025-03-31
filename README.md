@@ -36,17 +36,37 @@ npm install
 Dự án sử dụng tệp `.env` để lưu trữ cấu hình. Để khởi tạo, bạn có thể tạo tệp `.env` và điền các giá trị sau:
 
 ```env
-# Cookie người dùng (dùng để lấy fb_dtsg)
-COOKIE_USER=your_cookie_here
+# Server
+PORT=8000
+TOKEN_SECRET=PromaxcapdoNguyenGiaKhang1810
+COOKIE_SECURE=true
+INTERNAL_TOKEN_SECRET=PromaxcapdoNguyenGiaKhang1810
 
-# Mã fb_dtsg (sẽ được cập nhật tự động)
-FB_DTSG=your_fb_dtsg_here
+# DataBase
+STORAGE=db 
+STORAGE_TYPE=json
+ERROR_LOG=error.log
 
-# Cấu hình cơ sở dữ liệu
-DATABASE_URL=your_database_url
+# Admin
+USER=admin
+PASSWORD=promaxcapdo
 
-# Cổng chạy server
-PORT=3000
+# Google API Key
+YOUTUBE_KEY=
+
+# Facebook Key
+COOKIE_USER=
+FB_DTSG=
+
+# Gmail API
+GMAIL=
+CLIENT_ID=
+CLIENT_SECRET=
+REDIRECT_URI=https://developers.google.com/oauthplayground
+REFRESH_TOKEN=
+
+# Module Options
+AUTO_UPDATE=0
 ```
 
 Ứng dụng có cơ chế tự động cập nhật `fb_dtsg` nhưng không làm mất các dòng khác hoặc comment trong `.env`.
