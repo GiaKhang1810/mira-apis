@@ -12,35 +12,35 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="/r/c/facebook.css">
-    <script src="/r/j/facebook.js"></script>
+    <script src="/r/j/facebook.userid.js"></script>
 </head>
 
 <body>
     <div class="topbar">
         <button class="menu-btn"><i class="fas fa-bars"></i></button>
-        <h2>Facebook Downloader</h2>
+        <h2>Facebook Get User ID</h2>
     </div>
     <div class="sidebar" id="sidebar">
         <ul>
             <li onclick="OnClickLiID('home')">Home</li>
             <li onclick="OnClickLiID('docs')">Docs</li>
             <li onclick="OnClickLiID('post-dl')">Download Post</li>
-            <li onclick="OnClickLiID('get-user')">Get User</li>
+            <li onclick="OnClickLiID('video-dl')">Download Video</li>
+            <li onclick="OnClickLiID('info')">Get User</li>
         </ul>
     </div>
     <div class="main-container">
         <main>
-            <h1>Facebook Video Downloader</h1>
+            <h1>Facebook Get User ID</h1>
             <form>
                 <div class="field">
-                    <input type="url" name="facebook" id="facebook" required placeholder="Enter Facebook Video URL">
+                    <input type="text" name="facebook" id="facebook" required placeholder="Enter Facebook Profile URL Or Username">
                 </div>
                 <button type="submit" id="fetchBtn" class="fetchBtn">
-                    <i class="fas fa-download"></i> Fetch Video
+                    <i class="fas fa-download"></i> Find ID
                 </button>
                 <input type="hidden" id="token" value="<%= token %>">
             </form>
-            <div class="result-container"></div>
         </main>
     </div>
 </body>

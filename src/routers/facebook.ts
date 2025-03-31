@@ -14,7 +14,8 @@ import {
     StoryEdges,
     StoryMedia,
     StoryCard,
-    StoryRepresentations
+    StoryRepresentations,
+    AxiosUserIDResponse
 } from "../types/facebook";
 
 let token: string;
@@ -55,6 +56,66 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
         "Sec-Fetch-User": "?1",
         "Upgrade-Insecure-Requests": "1",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
+    }
+
+    const getGUID: () => string = (): string => {
+        let sectionLength: number = Date.now();
+        const id: string = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c: string): string => {
+            const r: number = Math.floor((sectionLength + Math.random() * 16) % 16);
+            sectionLength = Math.floor(sectionLength / 16);
+            const _guid: string = (c === "x" ? r : (r & 7) | 8).toString(16);
+            return _guid;
+        });
+        return id;
+    }
+
+    const getUserID: (username: string) => Promise<string> = async (username: string): Promise<string> => {
+        const data: URLSearchParams = new URLSearchParams({
+            fb_dtsg: fb_dtsg!,
+            fb_api_req_friendly_name: "SearchCometResultsInitialResultsQuery",
+            variables: JSON.stringify({
+                count: 5,
+                allow_streaming: false,
+                args: {
+                    callsite: "COMET_GLOBAL_SEARCH",
+                    config: {
+                        exact_match: false,
+                        high_confidence_config: null,
+                        intercept_config: null,
+                        sts_disambiguation: null,
+                        watch_config: null
+                    },
+                    context: {
+                        bsid: getGUID(),
+                        tsid: null
+                    },
+                    experience: {
+                        encoded_server_defined_params: null,
+                        fbid: null,
+                        type: "PEOPLE_TAB"
+                    },
+                    filters: [],
+                    text: username.toLowerCase()
+                },
+                cursor: null,
+                feedbackSource: 23,
+                fetch_filters: true,
+                renderLocation: "search_results_page",
+                scale: 1,
+                stream_initial_count: 0,
+                useDefaultActor: false,
+                __relay_internal__pv__IsWorkUserrelayprovider: false,
+                __relay_internal__pv__IsMergQAPollsrelayprovider: false,
+                __relay_internal__pv__StoriesArmadilloReplyEnabledrelayprovider: false,
+                __relay_internal__pv__StoriesRingrelayprovider: false
+            }),
+            server_timestamps: "true",
+            doc_id: "9946783172059974"
+        });
+
+        const res = await axios.post<AxiosUserIDResponse>("https://www.facebook.com/api/graphql/", data, { headers });
+
+        return res.data.data.serpResponse.results.edges[0].relay_rendering_strategy.view_model.profile.id;
     }
 
     const getRedirectURL: (url: string) => Promise<string> = async (url: string): Promise<string> => {
@@ -451,10 +512,66 @@ export default function (database: Record<string, Model<typeof db.define>>): Rou
         }
     });
 
+    routers.post("/api/findid", async (req: Request, res: Response): Promise<void> => {
+        const username = req.body.username as string;
+
+        if (!username) {
+            res.status(400);
+            res.json({
+                message: "Missing 'username' in request body"
+            });
+            return;
+        }
+
+        try {
+            const id: string = await getUserID(username);
+
+            res.status(200);
+            res.json({ id });
+        } catch (error: any) {
+            log.error("Facebook.findid", error);
+            res.status(500);
+            res.json({
+                message: "Serror error, please try again later"
+            });
+        }
+    });
+
+    routers.get("/api/findid", async (req: Request, res: Response): Promise<void> => {
+        const username = req.query.username as string;
+
+        if (!username) {
+            res.status(400);
+            res.json({
+                message: "Missing 'username' in request query"
+            });
+            return;
+        }
+
+        try {
+            const id: string = await getUserID(username);
+
+            res.status(200);
+            res.json({ id });
+        } catch (error: any) {
+            log.error("Facebook.findid", error);
+            res.status(500);
+            res.json({
+                message: "Serror error, please try again later"
+            });
+        }
+    });
+
     routers.get("/main", (req: Request, res: Response): void => {
         const token: string = (req as any).token;
         res.status(200);
-        res.render("facebook/index", { token });
+        res.render("facebook/main", { token });
+    });
+
+    routers.get("/id", (req: Request, res: Response): void => {
+        const token: string = (req as any).token;
+        res.status(200);
+        res.render("facebook/userid", { token });
     });
 
     routers.get("/", (req: Request, res: Response): void => {

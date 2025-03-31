@@ -160,3 +160,21 @@ export interface StoryDetails {
     reactCount: number;
     other_url: StoryRepresentations[];
 }
+
+export interface AxiosUserIDResponse {
+    data: {
+        serpResponse: {
+            results: {
+                edges: [{
+                    relay_rendering_strategy: {
+                        view_model: {
+                            profile: { 
+                                id: string;
+                            };
+                        };
+                    };
+                }];
+            };
+        };
+    };
+}

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Khang">
+    <title>Facebook Downloader | Mira</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="/r/c/facebook.css">
+    <script src="/r/j/facebook.main.js"></script>
+</head>
+
+<body>
+    <div class="topbar">
+        <button class="menu-btn"><i class="fas fa-bars"></i></button>
+        <h2>Facebook Downloader</h2>
+    </div>
+    <div class="sidebar" id="sidebar">
+        <ul>
+            <li onclick="OnClickLiID('home')">Home</li>
+            <li onclick="OnClickLiID('docs')">Docs</li>
+            <li onclick="OnClickLiID('post-dl')">Download Post</li>
+            <li onclick="OnClickLiID('info')">Get User</li>
+            <li onclick="OnClickLiID('id')">Get ID</li>
+        </ul>
+    </div>
+    <div class="main-container">
+        <main>
+            <h1>Facebook Video Downloader</h1>
+            <form>
+                <div class="field">
+                    <input type="url" name="facebook" id="facebook" required placeholder="Enter Facebook Video URL">
+                </div>
+                <button type="submit" id="fetchBtn" class="fetchBtn">
+                    <i class="fas fa-download"></i> Fetch Video
+                </button>
+                <input type="hidden" id="token" value="<%= token %>">
+            </form>
+            <div class="result-container"></div>
+        </main>
+    </div>
+</body>
+
+</html>

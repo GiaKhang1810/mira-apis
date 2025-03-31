@@ -11,8 +11,11 @@ function OnClickLiID(id) {
         case "post-dl":
             path = "/facebook/post";
             break;
-        case "get-user":
+        case "info":
             path = "/facebook/info";
+            break;
+        case "id":
+            path = "/facebook/id";
             break;
     }
 
@@ -55,7 +58,7 @@ function DOMContentLoaded() {
         let facebookURL = facebook.value.trim();
 
         if (!facebookURL || !isValidURL(facebookURL)) {
-            alert("Vui lòng nhập URL hợp lệ!");
+            alert("Please enter a valid URL!");
             return;
         }
 
