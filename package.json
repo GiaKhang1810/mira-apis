@@ -1,0 +1,57 @@
+{
+    "name": "mira-apis",
+    "version": "1.5.0",
+    "description": "A simple server and client, providing convenient features for users",
+    "main": "dist/index",
+    "scripts": {
+        "start": "npm run build && node dist/index.js",
+        "build": "tsc",
+        "lint": "eslint . --ext .ts",
+        "lint:fix": "eslint . --ext .ts --fix"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/GiaKhang1810/mira-apis.git"
+    },
+    "keywords": [
+        "mira"
+    ],
+    "author": "KhanG",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/GiaKhang1810/mira-apis/issues"
+    },
+    "homepage": "https://github.com/GiaKhang1810/mira-apis#readme",
+    "devDependencies": {
+        "@eslint/js": "^9.24.0",
+        "@types/chalk": "^0.4.31",
+        "@types/cheerio": "^0.22.35",
+        "@types/cookie-parser": "^1.4.8",
+        "@types/cors": "^2.8.17",
+        "@types/dotenv": "^6.1.1",
+        "@types/ejs": "^3.1.5",
+        "@types/express": "^5.0.0",
+        "@types/node": "^22.13.10",
+        "@types/sequelize": "^4.28.20",
+        "@types/sqlite3": "^3.1.11",
+        "@typescript-eslint/eslint-plugin": "^8.29.0",
+        "@typescript-eslint/parser": "^8.29.0",
+        "eslint": "^9.24.0",
+        "google-auth-library": "^9.15.1",
+        "googleapis": "^148.0.0",
+        "typescript": "^5.8.2"
+    },
+    "dependencies": {
+        "axios": "^1.8.1",
+        "chalk": "^4.1.2",
+        "cheerio": "^1.0.0",
+        "cookie-parser": "^1.4.7",
+        "cors": "^2.8.5",
+        "dotenv": "^16.4.7",
+        "ejs": "^3.1.10",
+        "express": "^4.21.2",
+        "readline": "^1.3.0",
+        "sequelize": "^6.37.6",
+        "sqlite3": "^5.1.7"
+    }
+}
