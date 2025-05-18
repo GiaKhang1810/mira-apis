@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Media Downloader</title>
+    <link rel="stylesheet" href="/s/c/facebook/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <a href="/facebook/document" class="api-btn"><i class="fas fa-code"></i> API</a>
+        <h1>Social Media Downloader</h1>
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="facebook">Facebook</button>
+            <button class="tab-btn" data-tab="instagram">Instagram</button>
+        </div>
+
+        <div class="tab-content active" id="facebook">
+            <div class="input-group">
+                <input type="text" id="fbUrl" placeholder="Enter Facebook video URL">
+                <button onclick="downloadFacebook()">Download</button>
+            </div>
+            <div id="fbPreview" class="preview-container"></div>
+        </div>
+
+        <div class="tab-content" id="instagram">
+            <div class="input-group">
+                <input type="text" id="igUrl" placeholder="Enter Instagram post URL">
+                <button onclick="downloadInstagram()">Download</button>
+            </div>
+            <div id="igPreview" class="preview-container"></div>
+        </div>
+
+        <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+            <p>Downloading...</p>
+        </div>
+    </div>
+    <script src="/s/j/facebook/main.js"></script>
+</body>
+
+</html>

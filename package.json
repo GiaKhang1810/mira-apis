@@ -1,11 +1,11 @@
 {
     "name": "mira-apis",
-    "version": "1.5.0",
+    "version": "1.6.0",
     "description": "A simple server and client, providing convenient features for users",
     "main": "dist/index",
     "scripts": {
         "start": "npm run build && node dist/index.js",
-        "build": "tsc",
+        "build": "tsc && tsc-alias",
         "lint": "eslint . --ext .ts",
         "lint:fix": "eslint . --ext .ts --fix"
     },
@@ -39,6 +39,7 @@
         "eslint": "^9.24.0",
         "google-auth-library": "^9.15.1",
         "googleapis": "^148.0.0",
+        "tsc-alias": "^1.8.16",
         "typescript": "^5.8.2"
     },
     "dependencies": {

@@ -55,5 +55,6 @@ namespace RequestURL {
         status: number;
         headers: Record<string, any>;
         body: T;
+        config: Record<string, any>;
     }
 }

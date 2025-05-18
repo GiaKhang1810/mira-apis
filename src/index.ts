@@ -4,15 +4,23 @@ import Cookie from 'cookie-parser';
 import Cors from 'cors';
 import { resolve } from 'path';
 import { readFileSync, existsSync, mkdirSync } from 'fs';
-import express, { Request, Response, Express, NextFunction } from 'express';
+import express, { Request, Response, Express, Router } from 'express';
 import { createServer, Server } from 'https';
 import { OAuth2Client } from 'google-auth-library';
 import { google } from 'googleapis';
 
-import cout from './utils/cout';
+import cout from '@utils/cout';
 import database from './database';
-import request, { CookieManager } from './utils/request';
+import request, { CookieManager } from '@utils/request';
+
+import RoutesList from './routers';
+
 import { version } from '../package.json';
+
+type RouteType = {
+    pathRoute: string;
+    modelRoute: Router;
+}
 
 const cwd: string = process.cwd();
 const dirViews: string = resolve(cwd, 'views');
@@ -20,6 +28,18 @@ const dirStatic: string = resolve(cwd, 'static');
 
 async function checkAndUpdate(): Promise<void> {
     cout.info('System', 'Running on version ' + version);
+}
+
+async function applyRoutes(app: Express): Promise<void> {
+    cout.wall('=', 100);
+    RoutesList.forEach(function (Route: RouteType): void {
+        const pathRoute: string = Route.pathRoute;
+        const modelRoute: Router = Route.modelRoute;
+
+        app.use(pathRoute, modelRoute);
+    });
+
+    cout.info('Router', RoutesList.length + ' routes loaded successfully');
 }
 
 async function getGoogleAuth(): Promise<OAuth2Client> {
@@ -116,8 +136,11 @@ function getSSL(): Record<string, string> {
 
     app.use(Cookie());
     app.use(Cors());
+    app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
     app.use('/s', express.static(dirStatic));
+
+    await applyRoutes(app);
 
     app.get('/danh-cho-babi-cua-toi-do', function (req: Request, res: Response): void {
         res.status(200);
@@ -129,7 +152,7 @@ function getSSL(): Record<string, string> {
         res.render('404');
     });
 
-    server.listen(PORT, (): void => {
+    server.listen(PORT, async (): Promise<void> => {
         cout.info('Server', 'Listening on port ' + PORT);
         cout.wall('=', 100);
     });

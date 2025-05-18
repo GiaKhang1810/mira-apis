@@ -1,10 +1,6 @@
-import fs from 'fs';
-import path from 'path';
 import { URL } from 'url';
-import { Readable } from 'stream';
 import { EventEmitter } from 'events';
-import { randomUUID } from 'crypto';
-import axios, { AxiosError, AxiosInstance, AxiosResponse, ResponseType } from 'axios';
+import axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios';
 import types from './types';
 
 type CookieStore = Record<string, Record<string, string>>;
@@ -17,6 +13,34 @@ export class CookieManager {
             return new URL(url).hostname;
         } catch (error: any) {
             return url;
+        }
+    }
+
+    constructor(cookies?: Array<string> | string, url?: string) {
+        if (!cookies)
+            return;
+
+        if (url) {
+            const domain: string = this.getDomain(url);
+            if (!this.store[domain])
+                this.store[domain] = {}
+            const cookie: Array<string> = types.isArray(cookies) ? cookies : [cookies];
+
+            for (let rawCookie of cookie) {
+                const parts: Array<string> = rawCookie.split(';');
+
+                for (let part of parts) {
+                    const eqIndex: number = part.indexOf('=');
+                    if (eqIndex === -1)
+                        continue;
+
+                    const name: string = part.slice(0, eqIndex).trim();
+                    const value: string = part.slice(eqIndex + 1).trim();
+
+                    if (name)
+                        this.store[domain][name] = value;
+                }
+            }
         }
     }
 
@@ -33,13 +57,13 @@ export class CookieManager {
 
             for (let part of parts) {
                 const eqIndex: number = part.indexOf('=');
-                if (eqIndex === -1) 
+                if (eqIndex === -1)
                     continue;
-    
+
                 const name: string = part.slice(0, eqIndex).trim();
                 const value: string = part.slice(eqIndex + 1).trim();
-    
-                if (name) 
+
+                if (name)
                     this.store[domain][name] = value;
             }
         }
@@ -114,7 +138,8 @@ export class Request extends EventEmitter {
                 method: response.config.method,
                 status: response.status,
                 headers: response.headers,
-                body: response.data
+                body: response.data,
+                config: response.config
             } as RequestURL.Response<T>);
 
             return response;
@@ -131,14 +156,14 @@ export class Request extends EventEmitter {
         });
     }
 
-    public async request<T>(url: string, options: RequestURL.Options = {}): Promise<RequestURL.Response<T>> {
+    public async request<T>(url: string, jar?: CookieManager, options: RequestURL.Options = {}): Promise<RequestURL.Response<T>> {
         const method: string = (options.method ?? 'GET').toUpperCase();
         const headers: Record<string, any> = {
             ...this.defaultOptions.headers,
             ...(options.headers || {})
         }
 
-        const cookieObj: Record<string, string> = this.jar.getCookie(url);
+        const cookieObj: Record<string, string> = (jar ? jar : this.jar).getCookie(url);
         const cookieStr: string = Object.entries(cookieObj)
             .map((item: Array<string>): string => item[0] + '=' + item[1])
             .join('; ');
@@ -165,6 +190,7 @@ export class Request extends EventEmitter {
         return {
             url,
             method: response.config.method,
+            config: response.config,
             status: response.status,
             headers: response.headers,
             body: response.data
@@ -172,17 +198,11 @@ export class Request extends EventEmitter {
     }
 
     public get<T>(url: string, jar?: CookieManager, options: RequestURL.Options = {}): Promise<RequestURL.Response<T>> {
-        if (jar)
-            this.jar = jar;
-
-        return this.request<T>(url, { ...options, method: 'GET' });
+        return this.request<T>(url, jar, { ...options, method: 'GET' });
     }
 
     public post<T>(url: string, jar?: CookieManager, options: RequestURL.Options = {}): Promise<RequestURL.Response<T>> {
-        if (jar)
-            this.jar = jar;
-
-        return this.request<T>(url, { ...options, method: 'POST' });
+        return this.request<T>(url, jar, { ...options, method: 'POST' });
     }
 
     public getJar(): CookieManager {

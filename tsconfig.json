@@ -11,7 +11,11 @@
     "moduleResolution": "node",
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "typeRoots": ["./node_modules/@types", "./src/interface", "./src/declare"]
+    "typeRoots": ["./node_modules/@types", "./src/interface", "./src/declare"],
+    "baseUrl": ".",
+    "paths": {
+      "@utils/*": ["src/utils/*"]
+    }
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules"]
