@@ -2,18 +2,18 @@
 
 ## Giới thiệu
 
-**Mira APIs** là một tập hợp các API mạnh mẽ, hỗ trợ quản lý và mở rộng ứng dụng một cách linh hoạt. Dự án được thiết kế để dễ dàng tích hợp và cung cấp hiệu suất cao.
+**Mira APIs** là bộ API mạnh mẽ, hỗ trợ quản lý và mở rộng ứng dụng một cách linh hoạt, dễ dàng tích hợp và tối ưu hiệu suất cho các dự án Node.js.
 
-## Tính năng
+## Tính năng nổi bật
 
-- **Dễ dàng tích hợp**: Hỗ trợ mở rộng linh hoạt với cấu trúc rõ ràng.
-- **Hiệu suất cao**: Được tối ưu để xử lý nhanh chóng.
-- **Bảo mật**: Sử dụng các cơ chế bảo mật để bảo vệ dữ liệu.
-- **Tự động cập nhật `fb_dtsg`**: Lấy và cập nhật `fb_dtsg` định kỳ mà không ghi đè toàn bộ tệp cấu hình.
+- **Tích hợp linh hoạt:** Cấu trúc rõ ràng, dễ mở rộng cho nhiều mục đích sử dụng.
+- **Hiệu suất tối ưu:** Xử lý nhanh, đáp ứng tốt cho các ứng dụng quy mô lớn.
+- **Bảo mật:** Áp dụng các cơ chế bảo vệ dữ liệu và thông tin nhạy cảm.
+- **Tự động cập nhật `fb_dtsg`:** Lấy và cập nhật mã `fb_dtsg` định kỳ mà không làm mất các cấu hình khác trong file `.env`.
 
-## Cài đặt
+## Hướng dẫn cài đặt
 
-### 1. Sao chép kho lưu trữ
+### 1. Sao chép mã nguồn
 
 ```bash
 git clone https://github.com/GiaKhang1810/mira-apis.git
@@ -25,7 +25,7 @@ git clone https://github.com/GiaKhang1810/mira-apis.git
 cd mira-apis
 ```
 
-### 3. Cài đặt các thư viện cần thiết
+### 3. Cài đặt các phụ thuộc
 
 ```bash
 npm install
@@ -33,26 +33,27 @@ npm install
 
 ## Cấu hình môi trường
 
-Dự án sử dụng tệp `.env` để lưu trữ cấu hình. Để khởi tạo, bạn có thể tạo tệp `.env` và điền các giá trị sau:
+Dự án sử dụng file `.env` để lưu trữ các thông tin cấu hình. Bạn cần tạo file `.env` trong thư mục gốc dự án với nội dung mẫu sau:
 
 ```env
 # System
-PORT=
-TOKEN_SECRET=
-COOKIE_SECURE=true
-FB_DTSG=
+PORT=8000
+SSL=false
+
+# Google
 GMAIL=
 CLIENT_ID=
 CLIENT_SECRET=
-REDIRECT_URI=https://developers.google.com/oauthplayground
+REDIRECT_URI=
 REFRESH_TOKEN=
 
 # Security
-SIGNATURE_KEY=
+SALT="tell the hackers this is our SALT string"
+SECRET_KEY="Don't tell them this password."
 
 # Database
-STORAGE=db
-ERROR_LOG=error.log
+DB_LOG=true
+STORAGE=database
 
 # Cookie
 FACEBOOK_COOKIE=
@@ -64,7 +65,7 @@ SEARCH_KEY=
 SEARCH_CX=
 ```
 
-Ứng dụng có cơ chế tự động cập nhật `fb_dtsg` nhưng không làm mất các dòng khác hoặc comment trong `.env`.
+> **Lưu ý:** Không chia sẻ file `.env` công khai để đảm bảo an toàn thông tin.
 
 ## Sử dụng
 
@@ -74,33 +75,33 @@ SEARCH_CX=
 npm start
 ```
 
-Ứng dụng sẽ chạy tại `http://localhost:3000`, trừ khi bạn thay đổi `PORT` trong `.env`.
+Ứng dụng mặc định chạy tại `http://localhost:3000` (hoặc cổng bạn cấu hình trong `.env`).
 
 ## Cơ chế tự động cập nhật `fb_dtsg`
 
-Ứng dụng sẽ tự động gửi request đến Facebook để lấy `fb_dtsg`, sau đó cập nhật `.env` mà không ghi đè toàn bộ file. Cách hoạt động:
+Ứng dụng tự động lấy mã `fb_dtsg` mới từ Facebook và cập nhật vào file `.env` mà không ghi đè các cấu hình khác. Quy trình gồm:
 
 1. **Gửi request đến Facebook** để lấy mã `fb_dtsg` mới.
-2. **Lấy và cập nhật cookie** để đảm bảo phiên làm việc hợp lệ.
-3. **Cập nhật `.env`** mà không làm mất các dòng khác.
-4. **Chạy định kỳ** mỗi 24 giờ để làm mới `fb_dtsg`.
+2. **Cập nhật cookie** để đảm bảo phiên làm việc hợp lệ.
+3. **Chỉ cập nhật dòng `fb_dtsg` trong `.env`**, giữ nguyên các dòng khác.
+4. **Tự động chạy lại mỗi 24 giờ** để đảm bảo mã luôn hợp lệ.
 
 ## Đóng góp
 
-Chúng tôi hoan nghênh mọi đóng góp từ cộng đồng. Nếu bạn muốn đóng góp, vui lòng:
+Chào mừng mọi đóng góp từ cộng đồng! Để đóng góp:
 
-1. **Fork** dự án.
-2. **Tạo một nhánh mới** với các thay đổi của bạn.
-3. **Gửi pull request** để được xem xét.
+1. **Fork** dự án về tài khoản của bạn.
+2. **Tạo nhánh mới** cho các thay đổi.
+3. **Gửi pull request** để được xem xét và hợp nhất.
 
 ## Giấy phép
 
-Dự án này được cấp phép theo **MIT License**. Vui lòng xem tệp `LICENSE` để biết thêm chi tiết.
+Dự án được phát hành theo giấy phép **MIT License**. Xem chi tiết trong file `LICENSE`.
 
 ## Liên hệ
 
-- **Tác giả**: Gia Khang
-- **Email**: ngkhang9a5lqc11@gmail.com
-- **Facebook**: [Gia Khang](https://www.facebook.com/GiaKhang.1810)
+- **Tác giả:** Gia Khang
+- **Email:** ngkhang9a5lqc11@gmail.com
+- **Facebook:** [Gia Khang](https://www.facebook.com/GiaKhang.1810)
 
-Nếu bạn có bất kỳ câu hỏi hoặc góp ý nào, hãy liên hệ với chúng tôi!
+Nếu có câu hỏi hoặc góp ý, vui lòng liên hệ với chúng tôi!

@@ -9,7 +9,7 @@ document.querySelectorAll('.tab-btn').forEach(button => {
 
 const showLoading = _ => document.getElementById('loading').classList.remove('hidden');
 const hideLoading = _ => document.getElementById('loading').classList.add('hidden');
-const clearValue = id => document.getElementById(id).value = '';-
+const clearValue = id => document.getElementById(id).value = '';
 
 async function getData(url, body) {
     const response = await fetch(url, {
