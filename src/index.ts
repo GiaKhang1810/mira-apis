@@ -141,7 +141,7 @@ function getSSL(): Record<string, string> {
     app.use('/s', express.static(dirStatic));
 
     await applyRoutes(app);
-
+    
     app.get('/danh-cho-babi-cua-toi-do', function (req: Request, res: Response): void {
         res.status(200);
         res.render('heart');
