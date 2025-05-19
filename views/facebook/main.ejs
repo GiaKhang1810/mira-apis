@@ -22,18 +22,18 @@
         <div class="tab-content active" id="facebook">
             <div class="input-group">
                 <input type="text" id="fbUrl" placeholder="Enter Facebook video URL">
-                <button onclick="downloadFacebook()">Download</button>
+                <button onclick="facebook()">Download</button>
             </div>
-            <div id="fbPreview" class="preview-container"></div>
         </div>
 
         <div class="tab-content" id="instagram">
             <div class="input-group">
                 <input type="text" id="igUrl" placeholder="Enter Instagram post URL">
-                <button onclick="downloadInstagram()">Download</button>
+                <button onclick="instagram()">Download</button>
             </div>
-            <div id="igPreview" class="preview-container"></div>
         </div>
+
+        <div id="preview" class="preview-container"></div>
 
         <div id="loading" class="loading hidden">
             <div class="spinner"></div>

@@ -26,26 +26,27 @@ async function getData(url, body) {
     }
 }
 
-function isValidURL(url) {
-    const regexPatterns = {
-        watch: /^https?:\/\/(www\.)?facebook\.com\/watch\/?\?v=\w+$/,
-        reel: /^https?:\/\/(www\.)?facebook\.com\/reel\/\w+\/?$/,
-        story: /^https?:\/\/(www\.)?facebook\.com\/stories\/\d+\/(?:[\w=]+.*|\?source=profile_highlight)$/,
-        storyLegacy: /^https?:\/\/(www\.)?facebook\.com\/story\.php\?story_fbid=\d+&id=\d+$/,
-        shareWithType: /^https?:\/\/(www\.)?facebook\.com\/share\/[rpv]\/\w+\/?$/,
-        shareGeneric: /^https?:\/\/(www\.)?facebook\.com\/share\/\w+\/?$/,
-        video: /^https?:\/\/(www\.)?facebook\.com\/[^/]+\/videos\/\w+\/?$/,
-        fbWatch: /^https?:\/\/fb\.watch\/\w+\/?$/
+async function facebook() {
+    function isValidURL(url) {
+        const regexPatterns = {
+            watch: /^https?:\/\/(www\.)?facebook\.com\/watch\/?\?v=\w+$/,
+            reel: /^https?:\/\/(www\.)?facebook\.com\/reel\/\w+\/?$/,
+            story: /^https?:\/\/(www\.)?facebook\.com\/stories\/\d+\/(?:[\w=]+.*|\?source=profile_highlight)$/,
+            storyLegacy: /^https?:\/\/(www\.)?facebook\.com\/story\.php\?story_fbid=\d+&id=\d+$/,
+            shareWithType: /^https?:\/\/(www\.)?facebook\.com\/share\/[rpv]\/\w+\/?$/,
+            shareGeneric: /^https?:\/\/(www\.)?facebook\.com\/share\/\w+\/?$/,
+            video: /^https?:\/\/(www\.)?facebook\.com\/[^/]+\/videos\/\w+\/?$/,
+            fbWatch: /^https?:\/\/fb\.watch\/\w+\/?$/
+        }
+
+        return Object
+            .values(regexPatterns)
+            .some(regex => regex.test(decodeURIComponent(url)));
     }
 
-    return Object
-        .values(regexPatterns)
-        .some(regex => regex.test(decodeURIComponent(url)));
-}
 
-async function downloadFacebook() {
     let url = document.getElementById('fbUrl').value.trim();
-    const previewContainer = document.getElementById('fbPreview');
+    const previewContainer = document.getElementById('preview');
     if (!url) {
         previewContainer.innerHTML = `<p style="color:red; text-align:center;">Please enter a Facebook video URL</p>`;
         return;
@@ -109,6 +110,68 @@ async function downloadFacebook() {
         previewContainer.innerHTML = `<p style="color:red; text-align:center;">${error.message}</p>`;
     } finally {
         clearValue('fbUrl');
+        hideLoading();
+    }
+}
+
+async function instagram() {
+    function validURL(igURL) {
+        try {
+            const tags = ['p', 'reel', 'reels', 'tv'];
+            const url = new URL(igURL);
+            const parts = url.pathname.split('/').filter(Boolean);
+            return url.hostname.endsWith('instagram.com') && parts.length >= 2 && tags.includes(parts[0]);
+        } catch {
+            throw new Error('Invalid Instagram URL.');
+        }
+    }
+
+    let url = document.getElementById('igUrl').value.trim();
+    const previewContainer = document.getElementById('preview');
+    if (!url) {
+        previewContainer.innerHTML = `<p style="color:red; text-align:center;">Please enter a Facebook video URL</p>`;
+        return;
+    }
+
+    if (!validURL(url)) {
+        previewContainer.innerHTML = `<p style="color:red; text-align:center;">Please enter a valid Facebook video URL</p>`;
+        clearValue('igUrl');
+        return;
+    }
+
+    showLoading();
+
+    try {
+        const response = await getData('/instagram/api/get-reel-and-post', { url });
+
+        if (response.status !== 200)
+            throw new Error('Can\'t process request');
+
+        const data = {
+            author: response.body.owner.name,
+            url: response.body.isVideo === true ? response.body.video_url : response.body.display_url
+        }
+
+        previewContainer.innerHTML = `
+            ${
+                response.body.isVideo === true ? 
+                `<video controls>
+                    <source src="${data.url}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>` : 
+                `<img src="${data.url}" alt="image.jpg"/>`
+            }
+            <p>Author: ${data.author}</p>
+            <div class="download-options">
+                <a href="${data.url}" download="${data.url}" class="download-btn">
+                    <i class="fas fa-download"></i> Download Video
+                </a>
+            </div>
+        `;
+    } catch (error) {
+        previewContainer.innerHTML = `<p style="color:red; text-align:center;">${error.message}</p>`;
+    } finally {
+        clearValue('igUrl');
         hideLoading();
     }
 }

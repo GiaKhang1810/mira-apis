@@ -1,7 +1,7 @@
 import express, { Router, Request, Response } from 'express';
 import { getUserID, getRedirectURL, getStoryDetails, getWatchAndReel } from './main';
-import cout from '@utils/cout';
 import { GetStory, GetWatchAndReel } from './types';
+import cout from '@utils/cout';
 
 type Story = {
     storyID?: string;
@@ -27,7 +27,7 @@ function getStory(storyURL: string): Story {
                 }
         }
 
-        const parts = url.pathname.split('/').filter(Boolean);
+        const parts: Array<string> = url.pathname.split('/').filter(Boolean);
         if (parts.length >= 2 && parts[0] === 'stories') {
             const albumID: string = parts[1];
             let storyID: string | undefined = parts[2];
@@ -106,8 +106,8 @@ async function getRedirect(req: Request, res: Response): Promise<void> {
         res.status(200);
         res.json({ redirectURL });
     } catch (error: any) {
-        if (error.name === '404') {
-            res.status(404);
+        if (error.name === '404' || error.name === '400') {
+            res.status(parseInt(error.name));
             res.json({
                 message: error.message
             });
@@ -144,7 +144,7 @@ async function downloadStory(req: Request, res: Response): Promise<void> {
         res.json(info);
     } catch (error: any) {
         if (error.name === '400' || error.name === '404') {
-            res.status(400);
+            res.status(parseInt(error.name));
             res.json({
                 message: error.message
             });
@@ -188,7 +188,7 @@ async function downloadWatchAndReel(req: Request, res: Response): Promise<void> 
         res.json(info);
     } catch (error: any) {
         if (error.name === '400' || error.name === '404') {
-            res.status(400);
+            res.status(parseInt(error.name));
             res.json({
                 message: error.message
             });
