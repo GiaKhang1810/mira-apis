@@ -153,7 +153,7 @@ export async function getStoryDetails(albumID: string, storyID?: string): Promis
 
 export async function getWatchAndReel(videoID: string): Promise<GetWatchAndReel.OutputDetails> {
     const jar: CookieManager = request.getJar();
-    jar.setCookie(process.env.FACEBOOK_COOKIE!, 'https://graph.facebook.com/')
+    jar.setCookie(process.env.FACEBOOK_COOKIE!, 'https://graph.facebook.com/');
     const srcURL: string = 'https://graph.facebook.com/v18.0/' + videoID;
     const response: RequestURL.Response<string> = await request.get<string>(srcURL, jar, {
         params: {
@@ -172,13 +172,11 @@ export async function getWatchAndReel(videoID: string): Promise<GetWatchAndReel.
         reactCount: body?.reactions?.summary?.total_count,
         commentCount: body?.comments?.summary?.total_count,
         url: body?.source,
-        thumbnails: body?.thumbnails?.data?.map((item: GetWatchAndReel.ComponentThumbnail): GetWatchAndReel.ComponentThumbnail => {
-            return {
-                id: item?.id,
-                height: item?.height,
-                width: item?.width,
-                uri: item?.uri
-            }
-        })
+        thumbnails: body?.thumbnails?.data?.map((item: GetWatchAndReel.ComponentThumbnail): GetWatchAndReel.ComponentThumbnail => ({
+            id: item?.id,
+            height: item?.height,
+            width: item?.width,
+            uri: item?.uri
+        }))
     }
 }

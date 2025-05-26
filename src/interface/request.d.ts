@@ -1,6 +1,10 @@
-type CookieStore = Record<string, Record<string, string>>;
-
 namespace RequestURL {
+    export interface CookieStore {
+        [domain: string]: {
+            [cookie: string]: string;
+        }
+    }
+
     export interface Headers {
         'Accept'?: string;
         'Accept-Encoding'?: string;
@@ -46,7 +50,8 @@ namespace RequestURL {
         withCredentials?: boolean;
         validateStatus?: (status: number) => boolean;
         data?: any;
-        method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+        method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS' | 'HEAD';
+        core?: 'axios' | 'fetch'
     }
 
     export interface Response<T> {
@@ -56,5 +61,19 @@ namespace RequestURL {
         headers: Record<string, any>;
         body: T;
         config: Record<string, any>;
+    }
+
+    export interface Error<T> {
+        name?: string;
+        message?: string;
+        url?: string;
+        method?: string;
+        status?: number;
+        headers?: Record<string, any>;
+        body?: T | any;
+        config?: Record<string, any>;
+        stack?: string;
+        code?: string;
+        isAxiosError?: boolean;
     }
 }

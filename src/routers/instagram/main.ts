@@ -98,13 +98,11 @@ export async function getReelAndPost(shortcode: string, retries: number = 0): Pr
             playCount: media?.video_play_count,
             thumbnail_url: media?.thumbnail_src,
             display_url: media?.display_url,
-            display_resources: media?.display_resources?.map(function (item: GetReelAndPost.DisplayResource): GetReelAndPost.Display {
-                return {
-                    url: item?.src,
-                    height: item?.config_height,
-                    width: item?.config_width
-                }
-            }),
+            display_resources: media?.display_resources?.map((item: GetReelAndPost.DisplayResource): GetReelAndPost.Display => ({
+                url: item?.src,
+                height: item?.config_height,
+                width: item?.config_width
+            })),
             height: media?.dimensions?.height,
             width: media?.dimensions?.width,
             video_url: media?.video_url,
@@ -129,13 +127,11 @@ export async function getReelAndPost(shortcode: string, retries: number = 0): Pr
                     width: child?.node?.dimensions?.width,
                     height: child?.node?.dimensions?.height,
                     display_url: child?.node?.display_url,
-                    display_resources: child?.node?.display_resources?.map(function (item: GetReelAndPost.DisplayResource): GetReelAndPost.Display {
-                        return {
-                            url: item?.src,
-                            height: item?.config_height,
-                            width: item?.config_width
-                        }
-                    })
+                    display_resources: child?.node?.display_resources?.map((item: GetReelAndPost.DisplayResource): GetReelAndPost.Display => ({
+                        url: item?.src,
+                        height: item?.config_height,
+                        width: item?.config_width
+                    }))
                 }
                 output.images.push(image);
             }

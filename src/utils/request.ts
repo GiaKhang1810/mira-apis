@@ -1,12 +1,9 @@
-import { URL } from 'url';
 import { EventEmitter } from 'events';
 import axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios';
 import types from './types';
 
-type CookieStore = Record<string, Record<string, string>>;
-
 export class CookieManager {
-    private store: CookieStore = {}
+    private store: RequestURL.CookieStore = {}
 
     private getDomain(url: string): string {
         try {
@@ -24,6 +21,7 @@ export class CookieManager {
             const domain: string = this.getDomain(url);
             if (!this.store[domain])
                 this.store[domain] = {}
+
             const cookie: Array<string> = types.isArray(cookies) ? cookies : [cookies];
 
             for (let rawCookie of cookie) {
@@ -74,7 +72,11 @@ export class CookieManager {
             return {}
 
         const domain: string = this.getDomain(url);
-        return this.store[domain] ?? {}
+
+        if (!this.store[domain])
+            this.store[domain] = {}
+
+        return this.store[domain];
     }
 
     public clearCookie(url?: string): undefined {
@@ -89,8 +91,8 @@ export class CookieManager {
 }
 
 export class Request extends EventEmitter {
-    private instance: AxiosInstance;
     private jar: CookieManager;
+    private instance: AxiosInstance = axios.create();
     private defaultOptions: RequestURL.Options = {
         headers: {
             'Priority': 'u=0, i',
@@ -107,60 +109,113 @@ export class Request extends EventEmitter {
             'Upgrade-Insecure-Requests': '1',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36'
         },
-        responseType: 'text'
+        responseType: 'text',
+        timeout: 5000,
+        core: 'axios'
     }
 
     constructor(options: RequestURL.Options = {}) {
         super();
 
-        if (options.jar)
-            this.jar = options.jar as CookieManager;
-        else
-            this.jar = new CookieManager();
+        this.jar = options.jar instanceof CookieManager ? options.jar : new CookieManager();
+
+        if (options.headers && types.isObject(options.headers) && Object.entries(options.headers).length > 0)
+            this.defaultOptions.headers = {
+                ...this.defaultOptions.headers,
+                ...options.headers
+            }
+
+        delete options.headers;
 
         this.defaultOptions = {
             ...this.defaultOptions,
             ...options
         }
+    }
 
-        delete this.defaultOptions.jar;
+    private async fetchCore<T>(url: string, requestOptions: RequestInit, jar?: CookieManager, validateStatus?: (status: number) => boolean): Promise<Response> {
+        const response: Response = await fetch(url, requestOptions);
+        const rawCookie: string | null = await response.headers.get('set-cookie');
+        const status: number = response.status;
 
-        this.instance = axios.create();
+        if (rawCookie)
+            (jar ? jar : this.jar).setCookie(rawCookie, url);
+
+        if (validateStatus && !validateStatus(status)) {
+            const error: RequestURL.Error<T> = {
+                name: 'fetchError',
+                message: 'Request failed with status code ' + status,
+                url,
+                method: requestOptions.method?.toUpperCase() ?? 'GET',
+                status,
+                headers: Object.fromEntries(response.headers.entries()),
+                body: (await response.clone().text()) as T,
+                config: requestOptions,
+                stack: new Error().stack,
+                code: undefined,
+                isAxiosError: false
+            }
+            throw error;
+        }
+
+        return response;
+    }
+
+    private async axiosCore<T>(requestOptions: Record<string, any>, jar?: CookieManager): Promise<RequestURL.Response<T>> {
         this.instance.interceptors.response.use(<T>(response: AxiosResponse<T>): AxiosResponse<T> => {
             const rawCookie: Array<string> | string | undefined = response.headers['set-cookie'];
             const url: string | undefined = response.config.url;
 
             if (rawCookie && url)
-                this.jar.setCookie(rawCookie, url);
+                (jar ? jar : this.jar).setCookie(rawCookie, url);
 
-            this.emit('response', {
+            const customResponse: RequestURL.Response<T> = {
                 url,
-                method: response.config.method,
-                status: response.status,
-                headers: response.headers,
-                body: response.data,
-                config: response.config
-            } as RequestURL.Response<T>);
+                method: response?.config?.method,
+                status: response?.status,
+                headers: response?.headers,
+                body: response?.data,
+                config: response?.config
+            }
 
+            this.emit('response', customResponse);
             return response;
-        }, (error: AxiosError): Promise<Error> => {
-            this.emit('error', {
-                url: error.config?.url,
-                method: error.config?.method,
-                message: error.message,
-                code: error.code,
-                response: error.response,
-                error
-            });
-            return Promise.reject(error);
+        }, <T>(error: AxiosError): Promise<RequestURL.Error<T>> => {
+            const customError: RequestURL.Error<T> = {
+                name: error?.name,
+                message: error?.message,
+                url: error?.config?.url,
+                method: error?.config?.method?.toUpperCase(),
+                status: error?.response?.status,
+                headers: error?.response?.headers,
+                body: error?.response?.data,
+                config: error?.config,
+                stack: error?.stack,
+                code: error?.code,
+                isAxiosError: error?.isAxiosError
+            }
+
+            this.emit('error', customError);
+
+            return Promise.reject(customError);
         });
+        const response: AxiosResponse<T> = await this.instance.request<T>(requestOptions);
+        return {
+            url: response.config.url,
+            method: response.config.method,
+            config: response.config,
+            status: response.status,
+            headers: response.headers,
+            body: response.data
+        }
     }
 
     public async request<T>(url: string, jar?: CookieManager, options: RequestURL.Options = {}): Promise<RequestURL.Response<T>> {
         const method: string = (options.method ?? 'GET').toUpperCase();
-        const headers: Record<string, any> = {
+
+        const headers: Record<string, string | undefined> = {
             ...this.defaultOptions.headers,
-            ...(options.headers || {})
+            ...(options.headers ?? {})
         }
 
         const cookieObj: Record<string, string> = (jar ? jar : this.jar).getCookie(url);
@@ -170,31 +225,94 @@ export class Request extends EventEmitter {
 
         headers.cookie = cookieStr;
 
+        if ((options.core ?? this.defaultOptions.core) === 'fetch') {
+            const requestOptions: RequestInit = {
+                method,
+                headers: Object.fromEntries(Object.entries(headers)?.filter((entry: [string, string | undefined]): entry is [string, string] => typeof entry[1] === 'string')),
+                body: options.data,
+                credentials: (options.withCredentials ?? this.defaultOptions.withCredentials) ? 'include' : 'same-origin',
+                redirect: (options.maxRedirect ?? this.defaultOptions.maxRedirect ?? 0) > 0 ? 'follow' : 'manual'
+            }
+
+            let timeoutID: NodeJS.Timeout | undefined;
+            const timeout: number = options.timeout ?? this.defaultOptions.timeout ?? 0;
+            if (timeout > 0) {
+                const controller: AbortController = new AbortController();
+                requestOptions.signal = controller.signal;
+                timeoutID = setTimeout(function (): void {
+                    controller?.abort();
+                }, timeout);
+            }
+
+            try {
+                const response: Response = await this.fetchCore(url, requestOptions, jar, options.validateStatus ?? this.defaultOptions.validateStatus);
+                const type: string = options.responseType ?? this.defaultOptions.responseType ?? 'text';
+                const parserMap: Record<string, () => Promise<any>> = {
+                    json: () => response.json(),
+                    text: () => response.text(),
+                    arraybuffer: () => response.arrayBuffer(),
+                    blob: () => response.blob(),
+                    stream: () => Promise.resolve(response.body)
+                }
+                const output: RequestURL.Response<T> = {
+                    url,
+                    method,
+                    status: response?.status,
+                    headers: Object.fromEntries(response.headers.entries()),
+                    body: await parserMap[type](),
+                    config: requestOptions
+                }
+                
+                this.emit('response', output);
+
+                return output;
+            } catch (error) {
+                this.emit('error', error);
+                throw error;
+            } finally {
+                if (timeoutID)
+                    clearTimeout(timeoutID);
+            }
+        }
+
         const requestOptions: Record<string, any> = {
             method,
             url,
             headers,
             baseURL: options.baseURL ?? this.defaultOptions.baseURL,
             timeout: options.timeout ?? this.defaultOptions.timeout,
-            proxy: options.proxy,
-            auth: options.auth,
-            params: options.params,
+            proxy: options.proxy ?? this.defaultOptions.proxy,
+            auth: options.auth ?? this.defaultOptions.auth,
+            params: options.params ?? this.defaultOptions.params,
             maxRedirects: options.maxRedirect ?? this.defaultOptions.maxRedirect,
-            withCredentials: options.withCredentials,
-            validateStatus: options.validateStatus,
+            withCredentials: options.withCredentials ?? this.defaultOptions.withCredentials,
+            validateStatus: options.validateStatus ?? this.defaultOptions.validateStatus,
             responseType: options.responseType ?? this.defaultOptions.responseType ?? 'text',
             data: options.data
         }
 
-        const response: AxiosResponse<T> = await this.instance.request<T>(requestOptions);
-        return {
-            url,
-            method: response.config.method,
-            config: response.config,
-            status: response.status,
-            headers: response.headers,
-            body: response.data
+        return await this.axiosCore<T>(requestOptions, jar);
+    }
+
+    public getJar(): CookieManager {
+        return this.jar;
+    }
+
+    public defaults(options: RequestURL.Options = {}): Request {
+        if (options.headers && types.isObject(options.headers) && Object.entries(options.headers).length > 0)
+            this.defaultOptions.headers = {
+                ...this.defaultOptions.headers,
+                ...options.headers
+            }
+
+        delete options.headers;
+
+        this.defaultOptions = {
+            ...this.defaultOptions,
+            ...options
         }
+
+        return this;
     }
 
     public get<T>(url: string, jar?: CookieManager, options: RequestURL.Options = {}): Promise<RequestURL.Response<T>> {
@@ -205,8 +323,24 @@ export class Request extends EventEmitter {
         return this.request<T>(url, jar, { ...options, method: 'POST' });
     }
 
-    public getJar(): CookieManager {
-        return this.jar;
+    public options<T>(url: string, jar?: CookieManager, options: RequestURL.Options = {}): Promise<RequestURL.Response<T>> {
+        return this.request<T>(url, jar, { ...options, method: 'OPTIONS' });
+    }
+
+    public put<T>(url: string, jar?: CookieManager, options: RequestURL.Options = {}): Promise<RequestURL.Response<T>> {
+        return this.request<T>(url, jar, { ...options, method: 'PUT' });
+    }
+
+    public delete<T>(url: string, jar?: CookieManager, options: RequestURL.Options = {}): Promise<RequestURL.Response<T>> {
+        return this.request<T>(url, jar, { ...options, method: 'DELETE' });
+    }
+
+    public head<T>(url: string, jar?: CookieManager, options: RequestURL.Options = {}): Promise<RequestURL.Response<T>> {
+        return this.request<T>(url, jar, { ...options, method: 'HEAD' });
+    }
+
+    public patch<T>(url: string, jar?: CookieManager, options: RequestURL.Options = {}): Promise<RequestURL.Response<T>> {
+        return this.request<T>(url, jar, { ...options, method: 'PATCH' });
     }
 }
 

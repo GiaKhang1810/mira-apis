@@ -205,23 +205,6 @@ async function downloadWatchAndReel(req: Request, res: Response): Promise<void> 
 routers.post('/api/download-watch-and-reel', downloadWatchAndReel);
 routers.get('/api/download-watch-and-reel', downloadWatchAndReel);
 
-function documentPage(req: Request, res: Response): void {
-    res.status(200);
-    res.render('facebook/document');
-}
-routers.get('/document', documentPage);
-
-function mainPage(req: Request, res: Response): void {
-    res.status(200);
-    res.render('facebook/main');
-}
-routers.get('/home', mainPage);
-
-function redirect(req: Request, res: Response): void {
-    res.redirect(302, '/facebook/home');
-}
-routers.get('/', redirect);
-
 export default {
     pathRoute: '/facebook',
     modelRoute: routers

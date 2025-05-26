@@ -12,7 +12,7 @@ module.exports = [
             '@typescript-eslint': require('@typescript-eslint/eslint-plugin'),
         },
         rules: {
-            '@typescript-eslint/array-type': ['error', { default: 'generic' }]
+            '@typescript-eslint/array-type': ['error', { default: 'generic' }],
         }
     }
 ];

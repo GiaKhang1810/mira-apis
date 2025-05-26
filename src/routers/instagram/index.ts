@@ -83,6 +83,7 @@ async function downloadReelAndPost(req: Request, res: Response): Promise<void> {
             return;
         }
 
+        cout.error('instagram.downloadReelAndPost', error);
         res.status(500);
         res.json({
             message: 'Server error, please try again later.'
