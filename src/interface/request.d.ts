@@ -21,15 +21,45 @@ namespace RequestURL {
         [item: string]: string | undefined;
     }
 
-    export interface Authenticate {
-        username: string;
-        password: string;
-    }
+    export type Authenticate =
+        | {
+            type: 'basic';
+            username: string;
+            password: string;
+        }
+        | {
+            type: 'bearer';
+            token: string;
+        }
+        | {
+            type: 'digest';
+            username: string;
+            password: string;
+            realm?: string;
+            nonce?: string;
+            qop?: string;
+            algorithm?: string;
+        }
+        | {
+            type: 'oauth1';
+            consumerKey: string;
+            consumerSecret: string;
+            token: string;
+            tokenSecret: string;
+            signatureMethod?: 'HMAC-SHA1' | 'RSA-SHA1' | 'PLAINTEXT';
+        }
+        | {
+            type: 'oauth2';
+            accessToken: string;
+            refreshToken?: string;
+            expiresIn?: number;
+            tokenType?: string;
+        }
 
     export interface Proxy {
         port: number;
         host: string;
-        auth?: Authenticate;
+        auth?:  Extract<Authenticate, { type: 'basic' }>;
         protocol?: 'http' | 'https';
     }
 

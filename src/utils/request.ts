@@ -226,6 +226,19 @@ export class Request extends EventEmitter {
         headers.cookie = cookieStr;
 
         if ((options.core ?? this.defaultOptions.core) === 'fetch') {
+            const baseURL: string | undefined = options.baseURL ?? this.defaultOptions.baseURL;
+            url = baseURL && !/^https?:\/\//i.test(url) ? new URL(url, baseURL).toString() : url;
+
+            const params: Record<string, string | undefined> | undefined = options.params ?? this.defaultOptions.params
+            if (params && Object.keys(params).length > 0) {
+                const urlObj: URL = new URL(url);
+                for (const [key, value] of Object.entries(params)) {
+                    if (value !== undefined)
+                        urlObj.searchParams.append(key, value);
+                }
+                url = urlObj.toString();
+            }
+
             const requestOptions: RequestInit = {
                 method,
                 headers: Object.fromEntries(Object.entries(headers)?.filter((entry: [string, string | undefined]): entry is [string, string] => typeof entry[1] === 'string')),
@@ -242,6 +255,44 @@ export class Request extends EventEmitter {
                 timeoutID = setTimeout(function (): void {
                     controller?.abort();
                 }, timeout);
+            }
+
+            let auth: RequestURL.Authenticate | undefined
+            if ((auth = options.auth ?? this.defaultOptions.auth)) {
+                switch (auth.type) {
+                    case 'basic':
+                        headers.Authorization = 'Basic ' + Buffer.from(auth.username + ':' + auth.password).toString('base64');
+                        break;
+                    case 'bearer':
+                        headers.Authorization = 'Bearer ' + auth.token;
+                        break;
+                    case 'oauth1':
+                        headers.Authorization = 'OAuth ' + [
+                            `oauth_consumer_key="${auth.consumerKey}"`,
+                            `oauth_token="${auth.token}"`,
+                            `oauth_signature_method="${auth.signatureMethod ?? 'HMAC-SHA1'}"`,
+                            `oauth_signature="${encodeURIComponent(auth.consumerSecret + '&' + auth.tokenSecret)}"`,
+                            `oauth_timestamp="${Math.floor(Date.now() / 1000)}"`,
+                            `oauth_nonce="${Math.random().toString(36).substring(2, 15)}"`,
+                            `oauth_version="1.0"`
+                        ].join(', ');
+                        break;
+                    case 'oauth2':
+                        headers.Authorization = 'Bearer ' + auth.accessToken;
+                        if (auth.refreshToken)
+                            headers['X-Refresh-Token'] = auth.refreshToken;
+
+                        if (auth.expiresIn)
+                            headers['X-Expires-In'] = auth.expiresIn.toString();
+
+                        if (auth.tokenType)
+                            headers['X-Token-Type'] = auth.tokenType;
+
+                        break;
+                    case 'digest':
+                        headers.Authorization = `Digest username="${auth.username}", password="${auth.password}", realm="${auth.realm ?? ''}", nonce="${auth.nonce ?? ''}", qop="${auth.qop ?? ''}", algorithm="${auth.algorithm ?? 'MD5'}"`;
+                        break;
+                }
             }
 
             try {
@@ -262,7 +313,7 @@ export class Request extends EventEmitter {
                     body: await parserMap[type](),
                     config: requestOptions
                 }
-                
+
                 this.emit('response', output);
 
                 return output;

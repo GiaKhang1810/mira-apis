@@ -155,6 +155,7 @@ export namespace GetAddrDetails {
         playCount: number;
         repostCount: number;
         caption: string;
+        createAt: number;
         hashtag: Array<OutputHashTag>;
         music: {
             id: string;

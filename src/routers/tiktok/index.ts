@@ -74,8 +74,8 @@ async function getAddr(req: Request, res: Response): Promise<void> {
         });
     }
 }
-routers.get('/get-addr', getAddr);
-routers.post('/get-addr', getAddr);
+routers.get('/api/get-addr', getAddr);
+routers.post('/api/get-addr', getAddr);
 
 export default {
     pathRoute: '/tiktok',

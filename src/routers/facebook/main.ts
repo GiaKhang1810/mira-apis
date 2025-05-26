@@ -7,7 +7,7 @@ import {
 
 const requestOptions: RequestURL.Options = {
     headers: {
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+        'Content-Type': 'application/x-www-form-urlencoded'
     },
     maxRedirect: 0,
     jar: new CookieManager(process.env.FACEBOOK_COOKIE!, 'https://www.facebook.com/'),

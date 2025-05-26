@@ -1,11 +1,10 @@
-import request from '@utils/request';
-import cheerio, { load } from 'cheerio';
+import { Request } from '@utils/request';
 import { GetAddrDetails } from './types';
 
+const request: Request = new Request({ core: 'fetch' });
+
 export async function getRedirectURL(url: string): Promise<string> {
-    const response: RequestURL.Response<string> = await request.head<string>(url, undefined, {
-        core: 'fetch'
-    });
+    const response: RequestURL.Response<string> = await request.head<string>(url);
     const location: string | undefined = response.headers.location;
 
     if (!location) {
@@ -66,6 +65,7 @@ export async function getAddrDetails(awemeID: string): Promise<GetAddrDetails.Ou
         repostCount: statistics?.repost_count,
         playCount: statistics?.play_count,
         shareCount: statistics?.share_count,
+        createAt: aweme?.create_time,
         caption: aweme?.desc,
         hashtag: aweme?.text_extra?.map((item: GetAddrDetails.ComponentOriTextExtra): GetAddrDetails.OutputHashTag => ({
             id: item?.hashtag_id,
