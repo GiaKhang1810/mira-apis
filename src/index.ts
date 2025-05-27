@@ -2,14 +2,15 @@ import 'dotenv/config';
 
 import Cookie from 'cookie-parser';
 import Cors from 'cors';
-import { resolve } from 'path';
-import { readFileSync, existsSync, mkdirSync } from 'fs';
+import { parse, resolve } from 'path';
+import { readFileSync, existsSync, mkdirSync, unlinkSync, readdirSync, statSync, Stats } from 'fs';
 import express, { Request, Response, Express, Router } from 'express';
 import { createServer, Server } from 'https';
 import { OAuth2Client } from 'google-auth-library';
 import { google } from 'googleapis';
 
 import cout from '@utils/cout';
+import getContentType from '@utils/getContentType';
 import database from './database';
 import request, { CookieManager } from '@utils/request';
 
@@ -25,6 +26,7 @@ type RouteType = {
 const cwd: string = process.cwd();
 const dirViews: string = resolve(cwd, 'views');
 const dirStatic: string = resolve(cwd, 'static');
+const directory: string = resolve(__dirname, 'database', process.env.CACHE_DIRECTORY ?? 'cache');
 
 async function checkAndUpdate(): Promise<void> {
     cout.info('System', 'Running on version ' + version);
@@ -40,6 +42,47 @@ async function applyRoutes(app: Express): Promise<void> {
     });
 
     cout.info('Router', RoutesList.length + ' routes loaded successfully');
+}
+
+async function getMediaFromShortCode(req: Request, res: Response): Promise<void> {
+    const shortcode: string | undefined = req.method === 'GET' ? req.query.shortcode : req.body.shortcode;
+
+    try {
+        if (!shortcode) {
+            const error: Error = new Error('Missing \'shortcode\'.');
+            error.name = '404';
+            throw error;
+        }
+
+        const files: Array<string> = readdirSync(directory);
+        const found: string | undefined = files.find((file: string): boolean => file.startsWith(shortcode + '.'));
+
+        if (!found) {
+            const error: Error = new Error('Shortcode not found.');
+            error.name = '404';
+            throw error;
+        }
+
+        const filePath: string = resolve(directory, found);
+        res.status(200);
+        res.setHeader('Content-Type', getContentType(filePath));
+        res.setHeader("Content-Disposition", 'inline; filename="' + found + '"');
+        res.sendFile(filePath);
+    } catch (error: any) {
+        if (error.name === '404') {
+            res.status(parseInt(error.name));
+            res.json({
+                message: error.message
+            });
+            return;
+        }
+
+        cout.error('DataBase', error);
+        res.status(500);
+        res.json({
+            message: 'Server error, please try again later.'
+        });
+    }
 }
 
 async function getGoogleAuth(): Promise<OAuth2Client> {
@@ -73,7 +116,7 @@ async function getOrRefreshDtsg(firstRun: boolean): Promise<void> {
     jar.setCookie(cookie, 'https://adsmanager.facebook.com/');
 
     try {
-        const response: RequestURL.Response<string> = await request.get<string>('https://adsmanager.facebook.com/adsmanager?act=403987283654016&nav_source=no_referrer#', jar);
+        const response: RequestURL.Response<string> = await request.get<string>('https://adsmanager.facebook.com/adsmanager?act=403987283654016&nav_source=no_referrer#', jar, { responseType: 'text' });
         const body: string = response.body;
 
         const dtsg: RegExpMatchArray | null = body.match(/"DTSGInitData",\[],\{"token":"([^"]+)",/);
@@ -91,6 +134,35 @@ async function getOrRefreshDtsg(firstRun: boolean): Promise<void> {
         cout.error('Environment', error);
         process.exit(1);
     }
+}
+
+function cleanCache(): void {
+    const expired: number = parseInt(process.env.CACHE_EXPIRED ?? '300000', 10);
+
+    if (!existsSync(directory)) {
+        cout.warn('DataBase', 'Cache directory does not exist.');
+        mkdirSync(directory, { recursive: true });
+        return;
+    }
+
+    const files: Array<string> = readdirSync(directory);
+
+    for (const file of files) {
+        const stat: Stats = statSync(resolve(directory, file));
+
+        if (Date.now() - stat.ctimeMs > expired) {
+            try {
+                unlinkSync(resolve(directory, file));
+                cout.info('DataBase', 'Deleted expired cache file: ' + file);
+            } catch (error: any) {
+                error.name = 'DataBase';
+                error.message = 'Failed to delete expired cache file: ' + file;
+                cout.error('DataBase', error);
+            }
+        }
+    }
+    cout.info('DataBase', 'Cache cleanup completed.');
+    setTimeout(cleanCache, expired);
 }
 
 function getSSL(): Record<string, string> {
@@ -142,6 +214,9 @@ function getSSL(): Record<string, string> {
 
     await applyRoutes(app);
 
+    app.get('/api/get-media-from-shortcode', getMediaFromShortCode);
+    app.post('/api/get-media-from-shortcode', getMediaFromShortCode);
+
     app.get('/danh-cho-babi-cua-toi-do', function (req: Request, res: Response): void {
         res.status(200);
         res.render('heart');
@@ -151,6 +226,9 @@ function getSSL(): Record<string, string> {
         res.status(404);
         res.render('404');
     });
+
+    if (process.env.AUTO_CLEAN_CACHE === 'true')
+        setTimeout(cleanCache, parseInt(process.env.CACHE_EXPIRED ?? '300000', 10));
 
     server.listen(PORT, async (): Promise<void> => {
         cout.info('Server', 'Listening on port ' + PORT);

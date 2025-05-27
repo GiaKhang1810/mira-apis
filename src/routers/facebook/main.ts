@@ -4,6 +4,7 @@ import {
     GetStory,
     GetWatchAndReel
 } from './types';
+import writer from '@utils/writer';
 
 const requestOptions: RequestURL.Options = {
     headers: {
@@ -148,6 +149,8 @@ export async function getStoryDetails(albumID: string, storyID?: string): Promis
     if (info?.extensions?.all_video_dash_prefetch_representations)
         output.other_url = info?.extensions?.all_video_dash_prefetch_representations[0]?.representations;
 
+    await writer.download(output.download_url.url_hd, output.userID);
+
     return output;
 }
 
@@ -163,7 +166,7 @@ export async function getWatchAndReel(videoID: string): Promise<GetWatchAndReel.
     });
     const body: GetWatchAndReel.OriDetails = JSON.parse(response.body);
 
-    return {
+    const output: GetWatchAndReel.OutputDetails = {
         videoID: body?.id,
         userID: body?.from?.id,
         author: body?.from?.name,
@@ -179,4 +182,8 @@ export async function getWatchAndReel(videoID: string): Promise<GetWatchAndReel.
             uri: item?.uri
         }))
     }
+
+    await writer.download(output.url, output.videoID);
+
+    return output;
 }

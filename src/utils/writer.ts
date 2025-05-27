@@ -1,94 +1,127 @@
 import { Readable } from 'stream';
 import { EventEmitter } from 'events';
-import { Request } from './request';
 import { resolve, extname, basename } from 'path';
 import { createWriteStream, WriteStream, mkdirSync, existsSync } from 'fs';
+import request, { Request, CookieManager } from './request';
+import { randomUUID } from 'crypto';
+import Mime from 'mime';
 
 type ResCallback = (value: Writer.Response) => void;
 type RejCallback = (value: Error) => void;
 
-const mine2ext: Record<string, string> = {
-    'image/jpeg': '.jpg',
-    'image/png': '.png',
-    'image/gif': '.gif',
-    'application/pdf': '.pdf',
-    'text/plain': '.txt',
-    'application/json': '.json',
-    'text/html': '.html',
-}
-
 export class Writer extends EventEmitter {
-    private request: Request = new Request({ responseType: 'stream' });
-    private baseDir: string = resolve(__dirname, '..', 'database', 'cache');
-
-    constructor(request?: Request, baseDir?: string) {
-        super();
-
-        if (baseDir)
-            this.baseDir = baseDir;
-
-        if (!existsSync(this.baseDir))
-            mkdirSync(this.baseDir, { recursive: true });
-
-        if (request)
-            this.request = request;
+    private request: Request;
+    private jar: CookieManager;
+    private directory: string;
+    private defaultOptions: Writer.Options = {
+        headers: {
+            'Prifilety': 'u=0, i',
+            'Sec-Ch-Ua': 'Chromium;v=134, Not:A-Brand;v=24, Google Chrome;v=134',
+            'Sec-Ch-Ua-Full-Version-List': 'Chromium;v=134.0.6998.119, Not:A-Brand;v=24.0.0.0, Google Chrome;v=134.0.6998.119',
+            'Sec-Ch-Ua-Mobile': '?0',
+            'Sec-Ch-Ua-Model': '',
+            'Sec-Ch-Ua-Platform': 'Windows',
+            'Sec-Ch-Ua-Platform-Version': '19.0.0',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'none',
+            'Sec-Fetch-User': '?1',
+            'Upgrade-Insecure-Requests': '1',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36'
+        }
     }
 
-    async download(url: string, name?: string): Promise<Writer.Response> {
-        let ori: string | undefined, ext: string | undefined;
+    constructor(options: Writer.Options = {}) {
+        super();
 
+        if (options.directory)
+            this.defaultOptions.directory = resolve(options.directory);
+        else
+            this.defaultOptions.directory = resolve(__dirname, '..', 'database', process.env.CACHE_DIRECTORY ?? 'cache');
+
+        if (!existsSync(this.defaultOptions.directory))
+            mkdirSync(this.defaultOptions.directory, { recursive: true });
+
+        this.directory = this.defaultOptions.directory;
+
+        if (options.jar && options.jar instanceof CookieManager)
+            this.jar = options.jar;
+        else
+            this.jar = new CookieManager();
+
+        if (options.headers)
+            this.defaultOptions.headers = {
+                ...this.defaultOptions.headers,
+                ...options.headers
+            }
+
+        this.request = request.defaults({
+            jar: this.jar,
+            headers: this.defaultOptions.headers,
+            responseType: 'stream'
+        });
+    }
+
+    public async download(url: string, name?: string): Promise<Writer.Response> {
+        let file: string | undefined, ext: string | undefined;
         const response: RequestURL.Response<Readable> = await this.request.get<Readable>(url);
-        const streamer: Readable = response.body;
+        const Streamer: Readable = response.body;
 
         const disposition: string = response.headers['content-disposition'];
         if (disposition && disposition.includes('filename=')) {
             const match: RegExpMatchArray | null = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
 
             if (match?.[1]) {
-                ori = match[1].replace(/^["']|["']$/g, '');
-                ext = extname(ori);
+                file = match[1].replace(/^["']|["']$/g, '');
+                ext = extname(file);
             }
         }
 
-        if (!ori) {
-            ori = basename(url.split('?')[0]);
-            ext = extname(ori);
+        if (!file) {
+            file = basename(url.split('?')[0]);
+            ext = extname(file);
         }
 
         if (!ext && name && !extname(name)) {
             const mime: string = response.headers['content-type'];
-            ext = mine2ext[mime] || '';
+            ext = Mime.getExtension(mime) || '';
         }
 
-        const filename: string = (name || ori || String(Date.now())).replace(/\.[^.]+$/, '') + ext;;
-        const save_location: string = resolve(this.baseDir, filename);
-        const writer: WriteStream = createWriteStream(save_location);
+        if (ext && !ext.startsWith('.'))
+            ext = '.' + ext;
 
-        return await new Promise((resolve: ResCallback, reject: RejCallback): void => {
+        const filename: string = (name ?? file ?? randomUUID()).replace(/\.[^.]+$/, '') + ext;
+        const location: string = resolve(this.directory, filename);
+        const writeStream: WriteStream = createWriteStream(location);
+
+        const Promiser: Promise<Writer.Response> = new Promise<Writer.Response>((resolve: ResCallback, reject: RejCallback) => {
             let size: number = 0;
             const start: number = Date.now();
 
-            streamer.on('data', (chunk: Buffer): number => size += chunk.length);
+            Streamer.on('data', (chunk: Buffer): number => size += chunk.length);
+            Streamer.pipe(writeStream);
 
-            streamer.pipe(writer);
-
-            writer.on('finish', (): void => {
-                const result: Writer.Response = {
-                    download_time_ms: Date.now() - start,
-                    item_size: size,
-                    extension: ext || '',
-                    filename,
-                    save_location
+            writeStream.on('finish', (): void => {
+                const delay: number = Date.now() - start;
+                const response: Writer.Response = {
+                    delay,
+                    size,
+                    ext: ext || '',
+                    name: filename,
+                    location
                 }
 
-                this.emit('finish', result);
-                resolve(result);
+                this.emit('done', response);
+                resolve(response);
             });
-            writer.on('error', (error: Error): void => {
+
+            writeStream.on('error', (error: Error): void => {
                 this.emit('error', error);
                 reject(error);
             });
         });
+
+        return await Promiser;
     }
 }
 

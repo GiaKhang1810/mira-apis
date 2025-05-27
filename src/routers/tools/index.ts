@@ -1,4 +1,5 @@
 import express, { Router, Request, Response } from 'express';
+import cout from '@utils/cout';
 
 const routers: Router = express.Router();
 

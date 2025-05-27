@@ -8,12 +8,14 @@ declare module 'express-serve-static-core' {
             url?: string;
             storyID?: string;
             albumID?: string;
+            shortcode?: string;
         }
         body: {
             username?: string;
             url?: string;
             storyID?: string;
             albumID?: string;
+            shortcode?: string;
         }
     }
 }

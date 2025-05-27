@@ -1,5 +1,6 @@
 import { Request, CookieManager } from '@utils/request';
 import { GetReelAndPost } from './types';
+import writer from '@utils/writer';
 
 const requestOptions: RequestURL.Options = {
     headers: {
@@ -11,7 +12,7 @@ const requestOptions: RequestURL.Options = {
 const request: Request = new Request(requestOptions);
 
 async function getCSRFT(): Promise<string> {
-    await request.get<string>('https://www.instagram.com/graphql/query/', undefined, {
+    await request.head<string>('https://www.instagram.com/graphql/query/', undefined, {
         params: {
             doc_id: '7950326061742207',
             variables: JSON.stringify({
@@ -91,6 +92,7 @@ export async function getReelAndPost(shortcode: string, retries: number = 0): Pr
                 avatar: owner?.profile_pic_url
             },
             isVideo: media?.is_video,
+            shortcode,
             title: media?.title,
             caption: media?.edge_media_to_caption?.edges[0]?.node?.text,
             commentCount: media?.edge_media_to_parent_comment?.count,
@@ -136,6 +138,14 @@ export async function getReelAndPost(shortcode: string, retries: number = 0): Pr
                 output.images.push(image);
             }
         }
+
+        if (!output.isVideo) {
+            for (const image of output.images) 
+                await writer.download(image.display_url, image.shortcode);
+        }
+
+        if (output.isVideo)
+            await writer.download(output.video_url, shortcode);
 
         return output;
     } catch (error: any) {

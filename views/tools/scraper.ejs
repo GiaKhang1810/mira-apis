@@ -5,6 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VideoGrab - Social Media Video Downloader</title>
+    <meta name="description"
+        content="Download videos, images, and audio from TikTok, YouTube, Instagram, and more using VideoGrab." />
+    <meta name="keywords"
+        content="video downloader, social media, TikTok, YouTube, Instagram, Facebook, Twitter, Threads, download videos, media downloader">
+    <meta name="author" content="Mira Team">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
@@ -135,19 +140,33 @@
                             <span class="cute-icon mr-2">🎉</span> Media Found!
                         </h3>
                         <div class="flex flex-col gap-4">
-                            <div id="media-preview-container" class="bg-primary rounded-lg p-2">
-                            </div>
+                            <div id="media-preview-container" class="bg-primary rounded-lg p-2"></div>
 
                             <div>
                                 <h4 id="media-title" class="font-medium text-primary mb-2 text-sm sm:text-base">Media
                                     Title</h4>
                                 <p id="media-info" class="text-secondary text-xs sm:text-sm mb-3 sm:mb-4">Media Info</p>
 
-                                <div id="download-buttons" class="flex flex-wrap gap-2">
-                                </div>
+                                <div id="download-buttons" class="flex flex-wrap gap-2"></div>
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <div id="alertBox"
+                    class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-4"
+                    role="alert">
+                    <strong class="font-bold">Oops Error!</strong>
+                    <span class="block sm:inline"></span>
+                    <span class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer"
+                        onclick="this.parentElement.classList.add('hidden')">
+                        <svg class="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20">
+                            <title>Đóng</title>
+                            <path
+                                d="M14.348 5.652a1 1 0 00-1.414 0L10 8.586 7.066 5.652a1 1 0 10-1.414 1.414L8.586 10l-2.934 2.934a1 1 0 101.414 1.414L10 11.414l2.934 2.934a1 1 0 001.414-1.414L11.414 10l2.934-2.934a1 1 0 000-1.414z" />
+                        </svg>
+                    </span>
                 </div>
             </div>
 

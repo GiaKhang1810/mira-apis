@@ -118,6 +118,7 @@ export namespace GetReelAndPost {
             postCount: number;
         }
         isVideo: boolean;
+        shortcode: string;
         title: string;
         caption: string;
         commentCount: number;

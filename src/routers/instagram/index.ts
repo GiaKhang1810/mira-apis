@@ -32,7 +32,7 @@ function getCodeReelAndPost(igURL: string): string {
         const url: URL = new URL(igURL);
         const parts: Array<string> = url.pathname.split('/').filter(Boolean);
 
-        if (parts.length >= 2 && tags.includes(parts[0])) 
+        if (parts.length >= 2 && tags.includes(parts[0]))
             return parts[1];
 
         const error: Error = new Error('Only posts/reels supported, check if your link is valid.');

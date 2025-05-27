@@ -1,9 +1,19 @@
 namespace Writer {
     export interface Response {
-        download_time_ms: number;
-        item_size: number;
-        extension: string;
-        filename: string;
-        save_location: string;
+        delay: number;
+        size: number;
+        ext: string;
+        name: string;
+        location: string;
+    }
+
+    export interface Options {
+        directory?: string;
+        jar?: {
+            setCookie(cookie: string | Array<string>, url: string): void;
+            getCookie(url?: string): RequestURL.CookieStore | Record<string, string>;
+            clearCookie(url?: string): void;
+        }
+        headers?: RequestURL.Headers;
     }
 }

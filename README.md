@@ -54,6 +54,9 @@ SECRET_KEY="Don't tell them this password."
 # Database
 DB_LOG=true
 STORAGE=database
+CACHE_DIRECTORY=cache
+AUTO_CLEAN_CACHE=true
+CACHE_EXPIRE_MS=300000
 
 # Cookie
 FACEBOOK_COOKIE=
