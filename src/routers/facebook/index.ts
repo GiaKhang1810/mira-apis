@@ -53,7 +53,7 @@ function getStory(storyURL: string): Story {
 const routers: Router = express.Router();
 
 async function findUID(req: Request, res: Response): Promise<void> {
-    let username: string | undefined = req.method === 'GET' ? req.query.username : req.body.username;
+    let username: string | undefined = (req.method === 'GET' ? req.query : req.body).username;
 
     try {
         if (!username) {
@@ -86,7 +86,7 @@ routers.post('/api/get-user-id', findUID);
 routers.get('/api/get-user-id', findUID);
 
 async function getRedirect(req: Request, res: Response): Promise<void> {
-    const url: string | undefined = req.method === 'POST' ? req.body.url : req.query.url;
+    const url: string | undefined = (req.method === 'POST' ? req.body : req.query).url;
 
     try {
         if (!url) {
@@ -125,7 +125,7 @@ routers.post('/api/get-redirect-url', getRedirect);
 routers.get('/api/get-redirect-url', getRedirect);
 
 async function downloadStory(req: Request, res: Response): Promise<void> {
-    let url: string | undefined = req.method === 'GET' ? req.query.url : req.body.url;
+    let url: string | undefined = (req.method === 'GET' ? req.query : req.body).url;
 
     try {
         if (!url) {
@@ -162,7 +162,7 @@ routers.post('/api/download-story', downloadStory);
 routers.get('/api/download-story', downloadStory);
 
 async function downloadWatchAndReel(req: Request, res: Response): Promise<void> {
-    let url: string | undefined = req.method === 'GET' ? req.query.url : req.body.url;
+    let url: string | undefined = (req.method === 'GET' ? req.query : req.body).url;
 
     try {
         if (!url) {

@@ -82,15 +82,16 @@ export class Writer extends EventEmitter {
             ext = extname(file);
         }
 
-        if (!ext && name && !extname(name)) {
-            const mime: string = response.headers['content-type'];
-            ext = Mime.getExtension(mime) || '';
+        if (!ext) {
+            const mime = response.headers['content-type'];
+            ext = Mime.getExtension(mime) || '.bin';
         }
 
         if (ext && !ext.startsWith('.'))
             ext = '.' + ext;
 
-        const filename: string = (name ?? file ?? randomUUID()).replace(/\.[^.]+$/, '') + ext;
+        const baseName = name ?? file ?? randomUUID();
+        const filename = extname(baseName) ? baseName : baseName + ext;
         const location: string = resolve(this.directory, filename);
         const writeStream: WriteStream = createWriteStream(location);
 
@@ -106,7 +107,7 @@ export class Writer extends EventEmitter {
                 const response: Writer.Response = {
                     delay,
                     size,
-                    ext: ext || '',
+                    ext: ext ?? '',
                     name: filename,
                     location
                 }
@@ -122,6 +123,35 @@ export class Writer extends EventEmitter {
         });
 
         return await Promiser;
+    }
+
+    public defaults(options: Writer.Options = {}): Writer {
+        if (options.directory)
+            this.defaultOptions.directory = resolve(options.directory);
+        else
+            this.defaultOptions.directory = resolve(__dirname, '..', 'database', process.env.CACHE_DIRECTORY ?? 'cache');
+
+        if (!existsSync(this.defaultOptions.directory))
+            mkdirSync(this.defaultOptions.directory, { recursive: true });
+
+        this.directory = this.defaultOptions.directory;
+
+        if (options.jar && options.jar instanceof CookieManager)
+            this.jar = options.jar;
+
+        if (options.headers)
+            this.defaultOptions.headers = {
+                ...this.defaultOptions.headers,
+                ...options.headers
+            }
+
+        this.request = request.defaults({
+            jar: this.jar,
+            headers: this.defaultOptions.headers,
+            responseType: 'stream'
+        });
+
+        return this;
     }
 }
 

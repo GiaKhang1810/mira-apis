@@ -28,7 +28,7 @@ function getID(tiktokURL: string): string {
         const parts: Array<string> = url.pathname.split('/').filter(Boolean);
 
         if (parts.length === 3 && parts[0].startsWith('@') && (parts[1] === 'video' || parts[1] === 'photo') && /^\d+$/.test(parts[2]))
-            return parts[2];
+            return parts[2].split('?')[0];
 
         const error: Error = new Error('Invalid TikTok URL.');
         error.name = '400';
@@ -42,7 +42,7 @@ function getID(tiktokURL: string): string {
 
 
 async function getAddr(req: Request, res: Response): Promise<void> {
-    let url: string | undefined = req.method === 'GET' ? req.query.url : req.body.url;
+    let url: string | undefined = (req.method === 'GET' ? req.query : req.body).url;
 
     try {
         if (!url) {

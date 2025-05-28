@@ -26,7 +26,7 @@ function getComponentOutputURL(info: GetAddrDetails.ComponentOriURL): GetAddrDet
         other: info?.url_list
     }
 
-    if (info.data_size)
+    if (info && info.data_size)
         output.size = info?.data_size;
 
     return output;
@@ -130,14 +130,16 @@ export async function getAddrDetails(awemeID: string): Promise<GetAddrDetails.Ou
 
     if (output.image) {
         for (const image of output.image.list)
-            await writer.download(image.display.other[0], image.display.uri.split('/').pop());
-    } 
+            await writer.download(image.display.other[0], image.display.uri.split('/').pop() + '.jpg');
+    }
 
     if (output.video.withoutWatermark)
         await writer.download(output.video.withoutWatermark.other[0], output.video.withoutWatermark.uri.split('/').pop());
+    else
+        await writer.download(output.video.playAddr.other[0], output.video.playAddr.uri.split('/').pop());
 
     if (output.music.url)
-        await writer.download(output.music.url.other[0], output.music.id);
+        await writer.download(output.music.url.other[0], output.music.id + '.mp3');
 
     return output;
 }

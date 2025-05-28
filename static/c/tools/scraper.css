@@ -149,12 +149,10 @@
     transform: scale(1.2);
 }
 
-/* Media preview styles */
 .media-preview {
     position: relative;
     width: 100%;
     padding-top: 56.25%;
-    /* 16:9 Aspect Ratio */
 }
 
 .media-preview img,
@@ -194,7 +192,6 @@
     object-fit: cover;
 }
 
-/* Loading animation */
 .loading {
     display: inline-block;
     width: 20px;
@@ -211,7 +208,6 @@
     }
 }
 
-/* Mobile optimizations */
 @media (max-width: 640px) {
     .mobile-full {
         width: 100%;

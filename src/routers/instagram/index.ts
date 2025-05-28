@@ -1,5 +1,5 @@
 import express, { Router, Request, Response } from 'express';
-import { getReelAndPost, getRedirectURL } from './main';
+import { getReelAndPost, getRedirectURL, getUserInfo } from './main';
 import { GetReelAndPost } from './types';
 import cout from '@utils/cout';
 
@@ -35,23 +35,25 @@ function getCodeReelAndPost(igURL: string): string {
         if (parts.length >= 2 && tags.includes(parts[0]))
             return parts[1];
 
+        if (parts.length >= 3 && tags.includes(parts[1]))
+            return parts[2];
+
         const error: Error = new Error('Only posts/reels supported, check if your link is valid.');
         error.name = '400';
         throw error;
     } catch (error: any) {
-        if (error.name === '400')
-            throw error;
+        if (error.name === '400') throw error;
 
-        error.message = 'Invalid Instagram URL.';
-        error.name = '400';
-        throw error;
+        const err = new Error('Invalid Instagram URL.');
+        err.name = '400';
+        throw err;
     }
 }
 
 const routers: Router = express.Router();
 
 async function downloadReelAndPost(req: Request, res: Response): Promise<void> {
-    let url: string | undefined = req.method === 'GET' ? req.query.url : req.body.url;
+    let url: string | undefined = (req.method === 'GET' ? req.query : req.body).url;
 
     try {
         if (!url) {
@@ -92,6 +94,13 @@ async function downloadReelAndPost(req: Request, res: Response): Promise<void> {
 }
 routers.get('/api/get-reel-and-post', downloadReelAndPost);
 routers.post('/api/get-reel-and-post', downloadReelAndPost);
+
+async function getUser(req: Request, res: Response): Promise<void> {
+    const username: string | undefined = req.method === 'GET' ? req.query.username : req.body.username;
+    
+}
+routers.get('/api/get-user-info', getUser);
+routers.post('/api/get-user-info', getUser);
 
 function redirect(req: Request, res: Response): void {
     res.redirect(302, '/facebook/home');

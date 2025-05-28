@@ -4,10 +4,13 @@ import writer from '@utils/writer';
 
 const requestOptions: RequestURL.Options = {
     headers: {
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'Instagram 123.0.0.21.114 Android (28/9; 420dpi; 1080x1920; Xiaomi; Redmi Note 7; lavender; qcom; en_US)',
+        'X-IG-App-ID': '936619743392459'
     },
     maxRedirect: 0,
-    responseType: 'text'
+    responseType: 'text',
+    core: 'fetch'
 }
 const request: Request = new Request(requestOptions);
 
@@ -156,4 +159,8 @@ export async function getReelAndPost(shortcode: string, retries: number = 0): Pr
 
         throw error;
     }
+}
+
+export async function getUserInfo(username: string): Promise<void> {
+
 }
