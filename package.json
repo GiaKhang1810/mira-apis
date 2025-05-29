@@ -1,6 +1,6 @@
 {
     "name": "mira-apis",
-    "version": "1.6.4",
+    "version": "1.6.6",
     "description": "A simple server and client, providing convenient features for users",
     "main": "dist/index",
     "scripts": {
