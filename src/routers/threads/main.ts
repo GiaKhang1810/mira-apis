@@ -69,6 +69,15 @@ export async function getPostDetails(url: string): Promise<GetPostDetails.Output
         images: []
     }
 
+    if (data.text_post_app_info.link_preview_attachment)
+        output.attachment = {
+            display: data.text_post_app_info.link_preview_attachment?.display_url,
+            favicon: data.text_post_app_info.link_preview_attachment?.favicon_url,
+            image: data.text_post_app_info.link_preview_attachment?.image_url,
+            title: data.text_post_app_info.link_preview_attachment?.title,
+            url: data.text_post_app_info.link_preview_attachment?.url
+        }
+
     if (data.carousel_media) {
         for (let i: number = 0; i < data.carousel_media.length; i++) {
             const media: GetPostDetails.Media = data.carousel_media[i];

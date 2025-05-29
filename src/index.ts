@@ -2,7 +2,7 @@ import 'dotenv/config';
 
 import Cookie from 'cookie-parser';
 import Cors from 'cors';
-import { parse, resolve } from 'path';
+import { resolve } from 'path';
 import { readFileSync, existsSync, mkdirSync, unlinkSync, readdirSync, statSync, Stats } from 'fs';
 import express, { Request, Response, Express, Router } from 'express';
 import { createServer, Server } from 'https';
@@ -11,12 +11,11 @@ import { google } from 'googleapis';
 
 import cout from '@utils/cout';
 import getContentType from '@utils/getContentType';
-import database from './database';
 import request, { CookieManager } from '@utils/request';
 
+import database from './database';
+import checkAndUpdate from './updater';
 import RoutesList from './routers';
-
-import { version } from '../package.json';
 
 type RouteType = {
     pathRoute: string;
@@ -27,10 +26,6 @@ const cwd: string = process.cwd();
 const dirViews: string = resolve(cwd, 'views');
 const dirStatic: string = resolve(cwd, 'static');
 const directory: string = resolve(__dirname, 'database', process.env.CACHE_DIRECTORY ?? 'cache');
-
-async function checkAndUpdate(): Promise<void> {
-    cout.info('System', 'Running on version ' + version);
-}
 
 async function applyRoutes(app: Express): Promise<void> {
     cout.wall('=', 100);

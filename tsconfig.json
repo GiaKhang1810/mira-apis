@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "target": "ES6",
-    "lib": ["ES6", "DOM"],
-    "module": "commonjs",
+    "target": "ES2024",
+    "lib": ["ES2024", "DOM"],
+    "module": "CommonJS",
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,

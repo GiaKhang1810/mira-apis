@@ -51,6 +51,13 @@ export namespace GetPostDetails {
         direct_reply_count: number;
         repost_count: number;
         quote_count: number;
+        link_preview_attachment: {
+            display_url: string;
+            favicon_url: string | null;
+            image_url: string | null;
+            title: string;
+            url: string;
+        } | null;
     }
 
     export interface Component {
@@ -97,5 +104,12 @@ export namespace GetPostDetails {
         audio?: string;
         images: Array<ComponentOriPhoto>;
         videos: Array<string>;
+        attachment?: {
+            display: string;
+            favicon: string | null;
+            image: string | null;
+            title: string;
+            url: string;
+        }
     }
 }

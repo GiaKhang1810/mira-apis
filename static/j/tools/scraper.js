@@ -320,6 +320,9 @@ downloadBtn.addEventListener('click', async function () {
                     throw new Error('URL is not a Threads post.');
 
                 response = await fetchData('/threads/api/get-post', inputURL);
+
+                if (response.videos.length === 0 && response.images.length === 0 && !response.audio)
+                    throw new Error('Media not found in url, make sure url has media.');
                 break;
             default:
                 throw new Error('Unsupported domain: ' + domain);
