@@ -101,7 +101,7 @@ async function updateAndRestart(): Promise<void> {
         rmSync(tempClone, { recursive: true, force: true });
         execSync('git clone --depth=1 ' + repo + ' "' + tempClone + '"', { stdio: 'ignore' });
 
-        const fileOrDirUpdate = ['src', 'static', 'views', 'package.json'];
+        const fileOrDirUpdate = ['src', 'static', 'views', 'package.json', '.gitignore', 'eslint.config.js', 'README.md'];
         for (const fileOrDir of fileOrDirUpdate) {
             const src = resolve(tempClone, fileOrDir);
             const dest = resolve(cwd, fileOrDir);
