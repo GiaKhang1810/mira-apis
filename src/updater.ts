@@ -111,9 +111,7 @@ async function updateAndRestart(): Promise<void> {
             }
         }
 
-        execSync('git add .', { cwd, stdio: 'ignore' });
-        const diff = execSync('git diff --name-status', { cwd, stdio: 'ignore' }).toString();
-        cout.info('System', 'Git Diff:\n' + diff);
+        rmSync(backupDir, { recursive: true, force: true });
 
         cout.success('Updated successfully.');
         cout.wall('=', 100);
@@ -128,6 +126,8 @@ async function updateAndRestart(): Promise<void> {
         else
             cout.warn('System', 'No backup available to restore.');
 
+        rmSync(backupDir, { recursive: true, force: true });
+        
         cout.wall('=', 100);
         process.exit(1);
     }
