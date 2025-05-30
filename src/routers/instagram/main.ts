@@ -10,7 +10,7 @@ const requestOptions: RequestURL.Options = {
     },
     maxRedirect: 0,
     responseType: 'text',
-    core: 'fetch'
+    core: 'fetch'   
 }
 const request: Request = new Request(requestOptions);
 
@@ -149,6 +149,9 @@ export async function getReelAndPost(shortcode: string, retries: number = 0): Pr
 
         if (output.isVideo)
             await writer.download(output.video_url, shortcode);
+
+        if (!output.isVideo && output.images.length === 0)
+            await writer.download(output.display_url, shortcode);
 
         return output;
     } catch (error: any) {

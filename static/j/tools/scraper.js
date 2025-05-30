@@ -204,6 +204,12 @@ function createMediaPreview(domain, data) {
             return;
         }
 
+        if (!data.isVideo && data.images.length === 0) {
+            const item = createSinglePreviewElement('img', data.shortcode);
+            mediaPreviewContainer.appendChild(item);
+            return;
+        }
+
         const grid = document.createElement('div');
         grid.className = 'media-grid';
 

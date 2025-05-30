@@ -30,7 +30,7 @@ async function getVersionCurrent(): Promise<string> {
 }
 
 async function checkGit(): Promise<boolean> {
-    const git: SpawnSyncReturns<Buffer<ArrayBufferLike>> = spawnSync('git', ['--version'], { stdio: 'ignore' });
+    const git: SpawnSyncReturns<Buffer<ArrayBufferLike>> = spawnSync('git', ['--version']);
 
     if (git.error ?? git.status !== 0) {
         cout.warn('System', 'Git is not installed.');
@@ -61,7 +61,7 @@ async function copyRecursive(src: string, dest: string): Promise<void> {
 async function createBackup(): Promise<void> {
     rmSync(backupDir, { recursive: true, force: true });
 
-    const backups: Array<string> = ['src', 'static', 'views', 'package.json'];
+    const backups: Array<string> = ['src', 'static', 'views', 'package.json', '.gitignore', 'eslint.config.js', 'README.md', 'LICENSE'];
 
     for (let fileOrDir of backups) {
         const src: string = resolve(cwd, fileOrDir);
@@ -101,7 +101,7 @@ async function updateAndRestart(): Promise<void> {
         rmSync(tempClone, { recursive: true, force: true });
         execSync('git clone --depth=1 ' + repo + ' "' + tempClone + '"', { stdio: 'ignore' });
 
-        const fileOrDirUpdate = ['src', 'static', 'views', 'package.json', '.gitignore', 'eslint.config.js', 'README.md'];
+        const fileOrDirUpdate = ['src', 'static', 'views', 'package.json', '.gitignore', 'eslint.config.js', 'README.md', 'LICENSE'];
         for (const fileOrDir of fileOrDirUpdate) {
             const src = resolve(tempClone, fileOrDir);
             const dest = resolve(cwd, fileOrDir);
@@ -112,8 +112,19 @@ async function updateAndRestart(): Promise<void> {
         }
 
         rmSync(backupDir, { recursive: true, force: true });
-
         cout.success('Updated successfully.');
+
+        const fileUpdated: string = execSync('git diff --name-only', { cwd }).toString().trim();
+
+        if (fileUpdated) {
+            const message: string = fileUpdated
+                .split('\n')
+                .filter((f: string): boolean => !f.startsWith('.backup/'))
+                .map((f: string): string => '- ' + f).join('\n');
+            cout.info('System', 'The following files were updated:\n' + message);
+        } else
+            cout.info('System', 'No changes detected after update.');
+
         cout.wall('=', 100);
         process.exit(0);
     } catch (error: any) {
@@ -127,7 +138,7 @@ async function updateAndRestart(): Promise<void> {
             cout.warn('System', 'No backup available to restore.');
 
         rmSync(backupDir, { recursive: true, force: true });
-        
+
         cout.wall('=', 100);
         process.exit(1);
     }
