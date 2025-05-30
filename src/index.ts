@@ -108,14 +108,14 @@ async function getOrRefreshDtsg(firstRun: boolean): Promise<void> {
 
     const jar: CookieManager = request.getJar();
 
-    jar.setCookie(cookie, 'https://adsmanager.facebook.com/');
+    jar.setCookie(cookie, 'https://business.facebook.com/');
 
     try {
-        const response: RequestURL.Response<string> = await request.get<string>('https://adsmanager.facebook.com/adsmanager?act=403987283654016&nav_source=no_referrer#', jar, { responseType: 'text' });
+        const response: RequestURL.Response<string> = await request.get<string>('https://business.facebook.com/content_management', jar, { responseType: 'text' });
         const body: string = response.body;
 
         const dtsg: RegExpMatchArray | null = body.match(/"DTSGInitData",\[],\{"token":"([^"]+)",/);
-        const token: RegExpMatchArray | null = /window\.__accessToken="(\S+)"/g.exec(body);
+        const token: RegExpMatchArray | null = /"accessToken":"(\S+)","clientID"/g.exec(body);
 
         if (!dtsg || !token)
             throw new Error('Unable to get dtsg or token.');

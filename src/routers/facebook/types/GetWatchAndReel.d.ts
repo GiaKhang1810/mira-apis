@@ -7,6 +7,9 @@ export namespace GetWatchAndReel {
     }
 
     export interface OriDetails {
+        error?: {
+            message: string
+        }
         id: string;
         description: string;
         created_time: string;

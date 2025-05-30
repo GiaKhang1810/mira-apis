@@ -1,9 +1,15 @@
 export namespace GetStory {
-    export interface ComponentOtherURL {
-        width: number;
+    export interface ComponentNail {
+        id: string;
         height: number;
-        base_url: string;
-        mime_type: string;
+        width: number;
+        url: string;
+    }
+
+    export interface OutputVideo {
+        id: string;
+        url: string;
+        thumbnails: Array<ComponentNail>;
     }
 
     export interface OutputDetails {
@@ -11,20 +17,8 @@ export namespace GetStory {
         name: string;
         title: string;
         publishedAt: number;
-        height: number;
-        width: number;
-        download_url: {
-            url_hd: string;
-            url_sd: string;
-        }
-        images: {
-            blurred: string;
-            preferred: string;
-            preview: string;
-            thumbnail: string;
-        }
         react_total: number;
-        other_url?: Array<ComponentOtherURL>;
+        videos: Array<OutputVideo>;
     }
 
     export interface OwnerDetails {
@@ -55,7 +49,8 @@ export namespace GetStory {
         videoDeliveryLegacyFields: {
             browser_native_hd_url: string;
             browser_native_sd_url: string;
-        }
+        },
+        videoId: string;
     }
 
     export interface Edges {
@@ -90,11 +85,7 @@ export namespace GetStory {
             ];
         }
         extensions: {
-            all_video_dash_prefetch_representations: [
-                {
-                    representations: Array<ComponentOtherURL>;
-                }
-            ];
+            all_video_dash_prefetch_representations: Array<{ video_id: string; }>;
         }
     }
 }

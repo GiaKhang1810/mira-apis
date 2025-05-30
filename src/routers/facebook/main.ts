@@ -131,25 +131,42 @@ export async function getStoryDetails(albumID: string, storyID?: string): Promis
         name: owner?.name,
         title: media?.title?.text,
         publishedAt: media?.publish_time,
-        height: media?.image?.height,
-        width: media?.image?.width,
-        download_url: {
-            url_hd: media?.videoDeliveryLegacyFields?.browser_native_hd_url,
-            url_sd: media?.videoDeliveryLegacyFields?.browser_native_sd_url
-        },
-        images: {
-            blurred: media?.blurred_image?.uri,
-            preferred: media?.preferred_thumbnail?.image?.uri,
-            preview: media?.previewImage?.uri,
-            thumbnail: edges?.story_card_info?.story_thumbnail?.uri
-        },
         react_total: edges?.story_card_info?.feedback_summary?.total_reaction_count,
+        videos: []
     }
 
-    if (info?.extensions?.all_video_dash_prefetch_representations)
-        output.other_url = info?.extensions?.all_video_dash_prefetch_representations[0]?.representations;
+    if (info.extensions && info.extensions.all_video_dash_prefetch_representations) {
+        for (let dash of info.extensions.all_video_dash_prefetch_representations) {
+            const watch: GetWatchAndReel.OutputDetails = await getWatchAndReel(dash.video_id);
+            const video: GetStory.OutputVideo = {
+                id: dash.video_id,
+                url: watch.url,
+                thumbnails: watch.thumbnails.map((item: GetWatchAndReel.ComponentThumbnail): GetStory.ComponentNail => ({
+                    id: item.id,
+                    height: item.height,
+                    width: item.width,
+                    url: item.uri
+                }))
+            }
+            output.videos.push(video);
+        }
+    } else {
+        const watch: GetWatchAndReel.OutputDetails = await getWatchAndReel(media.videoId);
+        const video: GetStory.OutputVideo = {
+            id: media.videoId,
+            url: watch.url,
+            thumbnails: watch.thumbnails.map((item: GetWatchAndReel.ComponentThumbnail): GetStory.ComponentNail => ({
+                id: item.id,
+                height: item.height,
+                width: item.width,
+                url: item.uri
+            }))
+        }
+        output.videos.push(video);
+    }
 
-    await writer.download(output.download_url.url_hd, output.userID);
+    for (let video of output.videos) 
+        await writer.download(video.url);
 
     return output;
 }
@@ -165,6 +182,12 @@ export async function getWatchAndReel(videoID: string): Promise<GetWatchAndReel.
         }
     });
     const body: GetWatchAndReel.OriDetails = JSON.parse(response.body);
+
+    if (body.error) {
+        const error: Error = new Error('No access to resources');
+        error.name = '403';
+        throw error;
+    }
 
     const output: GetWatchAndReel.OutputDetails = {
         videoID: body?.id,

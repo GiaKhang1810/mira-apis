@@ -187,7 +187,7 @@ async function downloadWatchAndReel(req: Request, res: Response): Promise<void> 
         res.status(200);
         res.json(info);
     } catch (error: any) {
-        if (error.name === '400' || error.name === '404') {
+        if (error.name === '400' || error.name === '404' || error.name === '403') {
             res.status(parseInt(error.name));
             res.json({
                 message: error.message

@@ -174,16 +174,31 @@ function createMediaPreview(domain, data) {
     }
 
     if (domain === 'facebook') {
-        let item;
         title.textContent = 'No title available';
-        if (data.download_url) {
+        if (data.videos && data.videos.length > 1) {
+            const grid = document.createElement('div');
+            grid.className = 'media-grid';
             info.textContent = `Posted by ${data.name} on ${new Date(data.publishedAt * 1000).toLocaleDateString()}`;
-            item = createSinglePreviewElement('video', data.userID);
-        } else {
-            info.textContent = `Posted by ${data.author} on ${new Date(data.publishedAt.replace(/(\+0000)$/, 'Z')).toLocaleDateString()}`;
-            item = createSinglePreviewElement('video', data.videoID);
+
+            data.videos.forEach(function (res, index) {
+                const item = createPreviewElement('video', basename(res.url), 'media-video-' + index);
+                grid.appendChild(item);
+            });
+
+            mediaPreviewContainer.appendChild(grid);
+            return;
         }
 
+        if (data.videos && data.videos.length === 1) {
+            info.textContent = `Posted by ${data.name} on ${new Date(data.publishedAt * 1000).toLocaleDateString()}`;
+            item = createSinglePreviewElement('video', basename(data.videos[0].url));
+
+            mediaPreviewContainer.appendChild(grid);
+            return;
+        }
+
+        info.textContent = `Posted by ${data.author} on ${new Date(data.publishedAt.replace(/(\+0000)$/, 'Z')).toLocaleDateString()}`;
+        const item = createSinglePreviewElement('video', data.videoID);
         mediaPreviewContainer.appendChild(item);
         return;
     }
@@ -280,7 +295,7 @@ function createMediaPreview(domain, data) {
 downloadBtn.addEventListener('click', async function () {
     hideError();
     downloadButtons.innerHTML = '';
-    
+
     let inputURL = inputMedia.value.trim();
 
     if (!inputURL)
