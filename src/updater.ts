@@ -112,19 +112,10 @@ async function updateAndRestart(): Promise<void> {
         }
 
         rmSync(backupDir, { recursive: true, force: true });
+        rmSync(backupDir, { recursive: true, force: true });
+        rmSync(tempClone, { recursive: true, force: true });
+        
         cout.success('Updated successfully.');
-
-        const fileUpdated: string = execSync('git diff --name-only', { cwd }).toString().trim();
-
-        if (fileUpdated) {
-            const message: string = fileUpdated
-                .split('\n')
-                .filter((f: string): boolean => !f.startsWith('.backup/'))
-                .map((f: string): string => '- ' + f).join('\n');
-            cout.info('System', 'The following files were updated:\n' + message);
-        } else
-            cout.info('System', 'No changes detected after update.');
-
         cout.wall('=', 100);
         process.exit(0);
     } catch (error: any) {
@@ -138,6 +129,7 @@ async function updateAndRestart(): Promise<void> {
             cout.warn('System', 'No backup available to restore.');
 
         rmSync(backupDir, { recursive: true, force: true });
+        rmSync(tempClone, { recursive: true, force: true });
 
         cout.wall('=', 100);
         process.exit(1);
