@@ -112,9 +112,8 @@ async function updateAndRestart(): Promise<void> {
         }
 
         rmSync(backupDir, { recursive: true, force: true });
-        rmSync(backupDir, { recursive: true, force: true });
         rmSync(tempClone, { recursive: true, force: true });
-        
+
         cout.success('Updated successfully.');
         cout.wall('=', 100);
         process.exit(0);
