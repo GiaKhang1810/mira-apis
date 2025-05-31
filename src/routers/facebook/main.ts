@@ -11,7 +11,7 @@ const requestOptions: RequestURL.Options = {
         'Content-Type': 'application/x-www-form-urlencoded'
     },
     maxRedirect: 0,
-    jar: new CookieManager(process.env.FACEBOOK_COOKIE!, 'https://www.facebook.com/'),
+    jar: new CookieManager(process.env.FACEBOOK_COOKIE, ['https://www.facebook.com/', 'https://graph.facebook.com/']),
     responseType: 'text'
 }
 
@@ -94,14 +94,13 @@ export async function getUserID(username: string): Promise<string> {
     const body: GetUserID = JSON.parse(response.body.split('\n')[0]);
     const userID: string = body.data?.serpResponse?.results?.edges[0]?.relay_rendering_strategy?.view_model?.profile?.id;
 
-    if (!userID) {
-        const error: Error = new Error();
-        error.name = '404';
-        error.message = 'Can\'t find userID from username.';
-        throw error;
-    }
+    if (userID)
+        return userID;
 
-    return userID;
+    const error: Error = new Error();
+    error.name = '404';
+    error.message = 'Can\'t find userID from username.';
+    throw error;
 }
 
 export async function getStoryDetails(albumID: string, storyID?: string): Promise<GetStory.OutputDetails> {
@@ -136,12 +135,18 @@ export async function getStoryDetails(albumID: string, storyID?: string): Promis
     }
 
     if (info.extensions && info.extensions.all_video_dash_prefetch_representations) {
-        for (let dash of info.extensions.all_video_dash_prefetch_representations) {
-            const watch: GetWatchAndReel.OutputDetails = await getWatchAndReel(dash.video_id);
+        const queue: Array<Promise<GetWatchAndReel.OutputDetails>> = [];
+
+        for (let dash of info.extensions.all_video_dash_prefetch_representations)
+            queue.push(getWatchAndReel(dash.video_id));
+
+        const queued: Array<GetWatchAndReel.OutputDetails> = await Promise.all(queue);
+
+        for (let dash of queued) {
             const video: GetStory.OutputVideo = {
-                id: dash.video_id,
-                url: watch.url,
-                thumbnails: watch.thumbnails.map((item: GetWatchAndReel.ComponentThumbnail): GetStory.ComponentNail => ({
+                id: dash.videoID,
+                url: dash.url,
+                thumbnails: dash.thumbnails.map((item: GetWatchAndReel.ComponentThumbnail): GetStory.ComponentNail => ({
                     id: item.id,
                     height: item.height,
                     width: item.width,
@@ -165,17 +170,12 @@ export async function getStoryDetails(albumID: string, storyID?: string): Promis
         output.videos.push(video);
     }
 
-    for (let video of output.videos) 
-        await writer.download(video.url);
-
     return output;
 }
 
 export async function getWatchAndReel(videoID: string): Promise<GetWatchAndReel.OutputDetails> {
-    const jar: CookieManager = request.getJar();
-    jar.setCookie(process.env.FACEBOOK_COOKIE!, 'https://graph.facebook.com/');
     const srcURL: string = 'https://graph.facebook.com/v18.0/' + videoID;
-    const response: RequestURL.Response<string> = await request.get<string>(srcURL, jar, {
+    const response: RequestURL.Response<string> = await request.get<string>(srcURL, undefined, {
         params: {
             fields: 'id,description,created_time,source,thumbnails,reactions.summary(true),comments.summary(true),from{name,id}',
             access_token: process.env.FACEBOOK_TOKEN

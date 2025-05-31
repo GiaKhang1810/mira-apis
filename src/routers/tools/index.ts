@@ -1,16 +1,16 @@
-import express, { Router, Request, Response } from 'express';
-import cout from '@utils/cout';
+import express, { Router } from 'express';
+import { DownloadMedia, GetMedia, Redirect, Scraper } from './main';
 
 const routers: Router = express.Router();
 
-routers.get('/scraper', (req: Request, res: Response): void => {
-    res.status(200);
-    res.render('tools/scraper');
-});
+routers.post('/api/get-media', GetMedia);
+routers.get('/api/get-media', GetMedia);
 
-routers.get('/', (req: Request, res: Response): void => {
-    res.redirect(302, '/tools/scraper');
-});
+routers.post('/api/download', DownloadMedia);
+routers.get('/api/download', DownloadMedia);
+
+routers.get('/scraper', Scraper);
+routers.get('/', Redirect);
 
 export default {
     pathRoute: '/tools',

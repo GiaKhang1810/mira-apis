@@ -143,8 +143,12 @@ export async function getReelAndPost(shortcode: string, retries: number = 0): Pr
         }
 
         if (!output.isVideo) {
+            const queue: Array<Promise<Writer.Response>> = [];
+
             for (const image of output.images) 
-                await writer.download(image.display_url, image.shortcode);
+                queue.push(writer.download(image.display_url, image.shortcode));
+
+            await Promise.all(queue);
         }
 
         if (output.isVideo)

@@ -13,30 +13,35 @@ export class CookieManager {
         }
     }
 
-    constructor(cookies?: Array<string> | string, url?: string) {
+    constructor(cookies?: Array<string> | string, url?: string | Array<string> | string) {
         if (!cookies)
             return;
 
+        if (url && !Array.isArray(url))
+            url = [url];
+
         if (url) {
-            const domain: string = this.getDomain(url);
-            if (!this.store[domain])
-                this.store[domain] = {}
+            for (let uri of url) {
+                const domain: string = this.getDomain(uri);
+                if (!this.store[domain])
+                    this.store[domain] = {}
 
-            const cookie: Array<string> = types.isArray(cookies) ? cookies : [cookies];
+                const cookie: Array<string> = types.isArray(cookies) ? cookies : [cookies];
 
-            for (let rawCookie of cookie) {
-                const parts: Array<string> = rawCookie.split(';');
+                for (let rawCookie of cookie) {
+                    const parts: Array<string> = rawCookie.split(';');
 
-                for (let part of parts) {
-                    const eqIndex: number = part.indexOf('=');
-                    if (eqIndex === -1)
-                        continue;
+                    for (let part of parts) {
+                        const eqIndex: number = part.indexOf('=');
+                        if (eqIndex === -1)
+                            continue;
 
-                    const name: string = part.slice(0, eqIndex).trim();
-                    const value: string = part.slice(eqIndex + 1).trim();
+                        const name: string = part.slice(0, eqIndex).trim();
+                        const value: string = part.slice(eqIndex + 1).trim();
 
-                    if (name)
-                        this.store[domain][name] = value;
+                        if (name)
+                            this.store[domain][name] = value;
+                    }
                 }
             }
         }

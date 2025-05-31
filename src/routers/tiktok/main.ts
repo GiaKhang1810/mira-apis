@@ -129,8 +129,12 @@ export async function getAddrDetails(awemeID: string): Promise<GetAddrDetails.Ou
         }
 
     if (output.image) {
+        const queue: Array<Promise<Writer.Response>> = [];
+
         for (const image of output.image.list)
-            await writer.download(image.display.other[0], image.display.uri.split('/').pop() + '.jpg');
+            queue.push(writer.download(image.display.other[0], image.display.uri.split('/').pop() + '.jpg'));
+
+        await Promise.all(queue);
     }
 
     if (output.video.withoutWatermark)

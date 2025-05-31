@@ -58,7 +58,7 @@ async function fetchData(url, input) {
 function createSinglePreviewElement(type, src) {
     const item = document.createElement('div');
     const media = document.createElement(type);
-    media.src = '/api/get-media-from-shortcode?shortcode=' + src;
+    media.src = '/tools/api/get-media?shortcode=' + src;
 
     if (type === 'video' || type === 'audio') {
         media.controls = true;
@@ -87,18 +87,7 @@ function createSinglePreviewElement(type, src) {
     button.style.display = 'block';
     button.style.margin = '1rem auto 0';
     button.appendChild(span);
-    button.onclick = async () => {
-        const res = await fetch(media.src);
-        const blob = await res.blob();
-
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        const disposition = res.headers.get('Content-Disposition');
-        link.download = disposition.match(/filename="([^"]+)"/)?.[1] || '';
-        link.click();
-        URL.revokeObjectURL(url);
-    }
+    button.onclick = () => window.location.href = '/tools/api/download?shortcode=' + src;
 
     item.appendChild(media);
     downloadButtons.appendChild(button);
@@ -110,7 +99,7 @@ function createPreviewElement(type, src, id) {
     const item = document.createElement('div');
     item.className = 'media-item';
     const media = document.createElement(type);
-    media.src = '/api/get-media-from-shortcode?shortcode=' + src;
+    media.src = '/tools/api/get-media?shortcode=' + src;
 
     if (type === 'video' || type === 'audio') {
         media.controls = true;
@@ -126,18 +115,7 @@ function createPreviewElement(type, src, id) {
     const button = document.createElement('button');
     button.className = 'download-hover-btn';
     button.textContent = '⬇ Download';
-    button.onclick = async () => {
-        const res = await fetch(media.src);
-        const blob = await res.blob();
-
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        const disposition = res.headers.get('Content-Disposition');
-        link.download = disposition.match(/filename="([^"]+)"/)?.[1] || '';
-        link.click();
-        URL.revokeObjectURL(url);
-    }
+    button.onclick = () => window.location.href = '/tools/api/download?shortcode=' + src;
 
     item.appendChild(media);
     item.appendChild(button);
@@ -181,7 +159,7 @@ function createMediaPreview(domain, data) {
             info.textContent = `Posted by ${data.name} on ${new Date(data.publishedAt * 1000).toLocaleDateString()}`;
 
             data.videos.forEach(function (res, index) {
-                const item = createPreviewElement('video', basename(res.url), 'media-video-' + index);
+                const item = createPreviewElement('video', res.id, 'media-video-' + index);
                 grid.appendChild(item);
             });
 
@@ -191,9 +169,9 @@ function createMediaPreview(domain, data) {
 
         if (data.videos && data.videos.length === 1) {
             info.textContent = `Posted by ${data.name} on ${new Date(data.publishedAt * 1000).toLocaleDateString()}`;
-            item = createSinglePreviewElement('video', basename(data.videos[0].url));
+            const item = createSinglePreviewElement('video', data.videos[0].id);
 
-            mediaPreviewContainer.appendChild(grid);
+            mediaPreviewContainer.appendChild(item);
             return;
         }
 

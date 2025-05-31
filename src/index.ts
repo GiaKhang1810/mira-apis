@@ -10,7 +10,6 @@ import { OAuth2Client } from 'google-auth-library';
 import { google } from 'googleapis';
 
 import cout from '@utils/cout';
-import getContentType from '@utils/getContentType';
 import request, { CookieManager } from '@utils/request';
 
 import database from './database';
@@ -37,47 +36,6 @@ async function applyRoutes(app: Express): Promise<void> {
     });
 
     cout.info('Router', RoutesList.length + ' routes loaded successfully');
-}
-
-async function getMediaFromShortCode(req: Request, res: Response): Promise<void> {
-    const shortcode: string | undefined = req.method === 'GET' ? req.query.shortcode : req.body.shortcode;
-
-    try {
-        if (!shortcode) {
-            const error: Error = new Error('Missing \'shortcode\'.');
-            error.name = '404';
-            throw error;
-        }
-
-        const files: Array<string> = readdirSync(directory);
-        const found: string | undefined = files.find((file: string): boolean => file.startsWith(shortcode + '.'));
-
-        if (!found) {
-            const error: Error = new Error('Shortcode not found.');
-            error.name = '404';
-            throw error;
-        }
-
-        const filePath: string = resolve(directory, found);
-        res.status(200);
-        res.setHeader('Content-Type', getContentType(filePath));
-        res.setHeader("Content-Disposition", 'inline; filename="' + found + '"');
-        res.sendFile(filePath);
-    } catch (error: any) {
-        if (error.name === '404') {
-            res.status(parseInt(error.name));
-            res.json({
-                message: error.message
-            });
-            return;
-        }
-
-        cout.error('DataBase', error);
-        res.status(500);
-        res.json({
-            message: 'Server error, please try again later.'
-        });
-    }
 }
 
 async function getGoogleAuth(): Promise<OAuth2Client> {
@@ -208,9 +166,6 @@ function getSSL(): Record<string, string> {
     app.use('/s', express.static(dirStatic));
 
     await applyRoutes(app);
-
-    app.get('/api/get-media-from-shortcode', getMediaFromShortCode);
-    app.post('/api/get-media-from-shortcode', getMediaFromShortCode);
 
     app.get('/danh-cho-babi-cua-toi-do', function (req: Request, res: Response): void {
         res.status(200);
