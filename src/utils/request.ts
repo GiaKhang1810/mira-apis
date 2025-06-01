@@ -138,6 +138,15 @@ export class Request extends EventEmitter {
         }
     }
 
+    private async getHeaders(headerOptions: RequestURL.Headers = {}): Promise<RequestURL.Headers> {
+        const headers: RequestURL.Headers = {
+            ...this.defaultOptions.headers,
+            ...headerOptions
+        }
+
+        return headers;
+    }
+
     private async fetchCore<T>(url: string, requestOptions: RequestInit, jar?: CookieManager, validateStatus?: (status: number) => boolean): Promise<Response> {
         const response: Response = await fetch(url, requestOptions);
         const rawCookie: string | null = await response.headers.get('set-cookie');
@@ -217,12 +226,7 @@ export class Request extends EventEmitter {
 
     public async request<T>(url: string, jar?: CookieManager, options: RequestURL.Options = {}): Promise<RequestURL.Response<T>> {
         const method: string = (options.method ?? 'GET').toUpperCase();
-
-        const headers: Record<string, string | undefined> = {
-            ...this.defaultOptions.headers,
-            ...(options.headers ?? {})
-        }
-
+        const headers: RequestURL.Headers = await this.getHeaders(options.headers);
         const cookieObj: Record<string, string> = (jar ? jar : this.jar).getCookie(url);
         const cookieStr: string = Object.entries(cookieObj)
             .map((item: Array<string>): string => item[0] + '=' + item[1])
@@ -262,7 +266,7 @@ export class Request extends EventEmitter {
                 }, timeout);
             }
 
-            let auth: RequestURL.Authenticate | undefined
+            let auth: RequestURL.Authenticate | undefined;
             if ((auth = options.auth ?? this.defaultOptions.auth)) {
                 switch (auth.type) {
                     case 'basic':

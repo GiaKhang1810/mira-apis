@@ -1,6 +1,6 @@
 import express, { Router, Request, Response } from 'express';
 import { getReelAndPost, getRedirectURL, getUserInfo } from './main';
-import { GetReelAndPost } from './types';
+import { GetReelAndPost, GetUserInfo } from './types';
 import cout from '@utils/cout';
 
 function validURL(igURL: string): boolean {
@@ -97,7 +97,32 @@ routers.post('/api/get-reel-and-post', downloadReelAndPost);
 
 async function getUser(req: Request, res: Response): Promise<void> {
     const username: string | undefined = (req.method === 'GET' ? req.query : req.body).username;
-    
+
+    try {
+        if (!username) {
+            const error: Error = new Error('Missing \'username\'.');
+            error.name = '404';
+            throw error;
+        }
+
+        const info: GetUserInfo.OutputDetails = await getUserInfo(username);
+        res.status(200);
+        res.json(info);
+    } catch (error: any) {
+        if (error.name === '404') {
+            res.status(parseInt(error.name));
+            res.json({
+                message: error.message
+            });
+            return;
+        }
+
+        cout.error('instagram.getUser', error);
+        res.status(500);
+        res.json({
+            message: 'Server error, please try again later.'
+        });
+    }
 }
 routers.get('/api/get-user-info', getUser);
 routers.post('/api/get-user-info', getUser);

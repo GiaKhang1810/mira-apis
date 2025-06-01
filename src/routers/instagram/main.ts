@@ -1,5 +1,5 @@
 import { Request, CookieManager } from '@utils/request';
-import { GetReelAndPost } from './types';
+import { GetReelAndPost, GetUserInfo } from './types';
 import writer from '@utils/writer';
 
 const requestOptions: RequestURL.Options = {
@@ -171,6 +171,35 @@ export async function getReelAndPost(shortcode: string, retries: number = 0): Pr
     }
 }
 
-export async function getUserInfo(username: string): Promise<void> {
+export async function getUserInfo(username: string): Promise<GetUserInfo.OutputDetails> {
+    const response: RequestURL.Response<string> = await request.get<string>('https://www.instagram.com/api/v1/users/web_profile_info/', undefined, {
+        params: {
+            username
+        },
+        headers: {
+            'X-CSRFToken': await getCSRFT()
+        }
+    });
 
+    try {
+        const info: GetUserInfo.OriDetails = JSON.parse(response.body);
+        const user: GetUserInfo.User = info?.data?.user;
+        const output: GetUserInfo.OutputDetails = {
+            userID: user?.id,
+            username: user?.username,
+            name: user?.full_name,
+            isVerified: user?.is_verified,
+            isPrivate: user?.is_private,
+            avatar: user?.profile_pic_url_hd ?? user?.profile_pic_url,
+            postCount: user?.edge_owner_to_timeline_media?.count,
+            followerCount: user?.edge_followed_by?.count,
+            followingCount: user?.edge_follow?.count
+        }
+
+        return output;
+    } catch {
+        const error: Error = new Error('Username is not exist.');
+        error.name = '404';
+        throw error;
+    }
 }

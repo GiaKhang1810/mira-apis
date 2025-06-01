@@ -95,6 +95,7 @@ function cleanCache(): void {
     if (!existsSync(directory)) {
         cout.warn('DataBase', 'Cache directory does not exist.');
         mkdirSync(directory, { recursive: true });
+        setTimeout(cleanCache, expired);
         return;
     }
 
@@ -178,7 +179,7 @@ function getSSL(): Record<string, string> {
     });
 
     if (process.env.AUTO_CLEAN_CACHE === 'true')
-        setTimeout(cleanCache, parseInt(process.env.CACHE_EXPIRED ?? '300000', 10));
+        cleanCache();
 
     server.listen(PORT, async (): Promise<void> => {
         cout.info('Server', 'Listening on port ' + PORT);
