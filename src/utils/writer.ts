@@ -4,7 +4,7 @@ import { resolve, extname, basename } from 'path';
 import { createWriteStream, WriteStream, mkdirSync, existsSync } from 'fs';
 import request, { Request, CookieManager } from './request';
 import { randomUUID } from 'crypto';
-import Mime from 'mime';
+import { getExtension } from 'mime';
 
 type ResCallback = (value: Writer.Response) => void;
 type RejCallback = (value: Error) => void;
@@ -84,7 +84,7 @@ export class Writer extends EventEmitter {
 
         if (!ext) {
             const mime = response.headers['content-type'];
-            ext = Mime.getExtension(mime) || '.bin';
+            ext = getExtension(mime) || '.bin';
         }
 
         if (ext && !ext.startsWith('.'))

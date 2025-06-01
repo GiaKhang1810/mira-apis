@@ -11,12 +11,14 @@ export namespace GetReelAndPost {
         height: number;
     }
 
-    export interface Image {
+    export interface Compoment {
         id: string;
+        isVideo: boolean;
         shortcode: string;
         width: number;
         height: number;
         display_url: string;
+        video_url?: string;
         display_resources: Array<Display>;
     }
 
@@ -31,6 +33,7 @@ export namespace GetReelAndPost {
             display_url: string;
             display_resources: Array<DisplayResource>;
             is_video: boolean;
+            video_url: string;
         }
     }
 
@@ -117,22 +120,12 @@ export namespace GetReelAndPost {
             followerCount: number;
             postCount: number;
         }
-        isVideo: boolean;
-        shortcode: string;
         title: string;
         caption: string;
         commentCount: number;
         likeCount: number;
         playCount: number;
-        thumbnail_url: string;
-        display_url: string;
-        height: number;
-        width: number;
-        display_resources: Array<Display>;
-        images: Array<Image>;
-        video_url: string;
-        video_duration: number;
-        has_audio: boolean;
+        createAt: number;
         audio: {
             author: string;
             song: string;
@@ -141,5 +134,6 @@ export namespace GetReelAndPost {
             mute_reason: string;
             id: string;
         }
+        url: Array<Compoment>;
     }
 }

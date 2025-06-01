@@ -9,6 +9,7 @@ declare module 'express-serve-static-core' {
             storyID?: string;
             albumID?: string;
             shortcode?: string;
+            download?: boolean;
         }
         body: {
             username?: string;
@@ -16,6 +17,7 @@ declare module 'express-serve-static-core' {
             storyID?: string;
             albumID?: string;
             shortcode?: string;
+            download?: boolean;
         }
     }
 }

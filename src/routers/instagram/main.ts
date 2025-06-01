@@ -10,7 +10,7 @@ const requestOptions: RequestURL.Options = {
     },
     maxRedirect: 0,
     responseType: 'text',
-    core: 'fetch'   
+    core: 'fetch'
 }
 const request: Request = new Request(requestOptions);
 
@@ -94,26 +94,12 @@ export async function getReelAndPost(shortcode: string, retries: number = 0): Pr
                 followerCount: owner?.edge_followed_by?.count,
                 avatar: owner?.profile_pic_url
             },
-            isVideo: media?.is_video,
-            shortcode,
             title: media?.title,
             caption: media?.edge_media_to_caption?.edges[0]?.node?.text,
             commentCount: media?.edge_media_to_parent_comment?.count,
             likeCount: media?.edge_media_preview_like?.count,
             playCount: media?.video_play_count,
-            thumbnail_url: media?.thumbnail_src,
-            display_url: media?.display_url,
-            display_resources: media?.display_resources?.map((item: GetReelAndPost.DisplayResource): GetReelAndPost.Display => ({
-                url: item?.src,
-                height: item?.config_height,
-                width: item?.config_width
-            })),
-            height: media?.dimensions?.height,
-            width: media?.dimensions?.width,
-            video_url: media?.video_url,
-            video_duration: media?.video_duration,
-            images: [],
-            has_audio: media?.has_audio,
+            createAt: media?.taken_at_timestamp,
             audio: {
                 author: media?.clips_music_attribution_info?.artist_name,
                 song: media?.clips_music_attribution_info?.song_name,
@@ -121,13 +107,15 @@ export async function getReelAndPost(shortcode: string, retries: number = 0): Pr
                 should_mute: media?.clips_music_attribution_info?.should_mute_audio,
                 mute_reason: media?.clips_music_attribution_info?.should_mute_audio_reason,
                 id: media?.clips_music_attribution_info?.audio_id
-            }
+            },
+            url: []
         }
 
         if (media?.__typename === 'XDTGraphSidecar') {
             for (const child of media?.edge_sidecar_to_children?.edges) {
-                const image: GetReelAndPost.Image = {
+                const compoment: GetReelAndPost.Compoment = {
                     id: child?.node?.id,
+                    isVideo: child?.node?.is_video,
                     shortcode: child?.node?.shortcode,
                     width: child?.node?.dimensions?.width,
                     height: child?.node?.dimensions?.height,
@@ -138,24 +126,39 @@ export async function getReelAndPost(shortcode: string, retries: number = 0): Pr
                         width: item?.config_width
                     }))
                 }
-                output.images.push(image);
+
+                if (compoment.isVideo)
+                    compoment.video_url = child?.node?.video_url;
+
+                output.url.push(compoment);
             }
+        } else {
+            const compoment: GetReelAndPost.Compoment = {
+                id: media?.id,
+                isVideo: media?.is_video,
+                shortcode,
+                height: media?.dimensions?.height,
+                width: media?.dimensions?.width,
+                display_url: media?.display_url,
+                display_resources: media?.display_resources?.map((item: GetReelAndPost.DisplayResource): GetReelAndPost.Display => ({
+                    url: item?.src,
+                    height: item?.config_height,
+                    width: item?.config_width
+                }))
+            }
+
+            if (compoment.isVideo)
+                compoment.video_url = media?.video_url;
+
+            output.url.push(compoment);
         }
 
-        if (!output.isVideo) {
-            const queue: Array<Promise<Writer.Response>> = [];
+        const queue: Array<Promise<Writer.Response>> = [];
 
-            for (const image of output.images) 
-                queue.push(writer.download(image.display_url, image.shortcode));
+        for (const res of output.url)
+            queue.push(writer.download(res.isVideo && res.video_url ? res.video_url : res.display_url, res.shortcode));
 
-            await Promise.all(queue);
-        }
-
-        if (output.isVideo)
-            await writer.download(output.video_url, shortcode);
-
-        if (!output.isVideo && output.images.length === 0)
-            await writer.download(output.display_url, shortcode);
+        await Promise.all(queue);
 
         return output;
     } catch (error: any) {

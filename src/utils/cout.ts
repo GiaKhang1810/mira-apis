@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import time from './time';
 import { resolve } from 'path';
-import { writeFileSync, appendFileSync, existsSync, mkdirSync } from 'fs';
+import { writeFileSync, existsSync, mkdirSync } from 'fs';
 
 const ERROR_LOG: string = resolve(__dirname, '..', 'database', 'error');
 
@@ -13,8 +13,11 @@ let frameIndex: number = 0;
 const frames: Array<string> = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 
 function clearLine(): void {
-    process.stdout.clearLine(0);
-    process.stdout.cursorTo(0);
+    if (process.stdout.isTTY && typeof process.stdout.clearLine === 'function' && typeof process.stdout.cursorTo === 'function') {
+        process.stdout.clearLine(0);
+        process.stdout.cursorTo(0);
+    } else
+        process.stdout.write('\n');
 }
 
 const load: Cout.Load = (text: string, cycle: number = 80): void => {

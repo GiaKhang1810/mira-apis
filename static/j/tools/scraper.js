@@ -68,7 +68,7 @@ function createSinglePreviewElement(type, src) {
     }
 
     if (type === 'audio') {
-        item.class = 'w-full';
+        item.className = 'w-full';
         media.className = 'w-full';
     } else if (type === 'video') {
         item.class = 'w-full h-full';
@@ -87,7 +87,7 @@ function createSinglePreviewElement(type, src) {
     button.style.display = 'block';
     button.style.margin = '1rem auto 0';
     button.appendChild(span);
-    button.onclick = () => window.location.href = '/tools/api/download?shortcode=' + src;
+    button.onclick = () => window.location.href = '/tools/api/get-media?download=true&shortcode=' + src;
 
     item.appendChild(media);
     downloadButtons.appendChild(button);
@@ -115,7 +115,7 @@ function createPreviewElement(type, src, id) {
     const button = document.createElement('button');
     button.className = 'download-hover-btn';
     button.textContent = '⬇ Download';
-    button.onclick = () => window.location.href = '/tools/api/download?shortcode=' + src;
+    button.onclick = () => window.location.href = '/tools/api/get-media?download=true&shortcode=' + src;
 
     item.appendChild(media);
     item.appendChild(button);
@@ -183,22 +183,10 @@ function createMediaPreview(domain, data) {
 
     if (domain === 'instagram') {
         title.textContent = data.caption;
-        info.textContent = 'Posted by ' + data.owner.name;
+        info.textContent = 'Posted by ' + data.owner.name + ' on ' + new Date(data.createAt * 1000).toLocaleDateString();;
 
-        if (data.isVideo) {
-            const item = createSinglePreviewElement('video', data.shortcode);
-            mediaPreviewContainer.appendChild(item);
-            return;
-        }
-
-        if (data.images && data.images.length === 1) {
-            const item = createSinglePreviewElement('img', data.images[0].shortcode);
-            mediaPreviewContainer.appendChild(item);
-            return;
-        }
-
-        if (!data.isVideo && data.images.length === 0) {
-            const item = createSinglePreviewElement('img', data.shortcode);
+        if (data.url.length === 1) {
+            const item = createSinglePreviewElement(data.url[0].isVideo ? 'video' : 'img', data.url[0].shortcode);
             mediaPreviewContainer.appendChild(item);
             return;
         }
@@ -206,8 +194,8 @@ function createMediaPreview(domain, data) {
         const grid = document.createElement('div');
         grid.className = 'media-grid';
 
-        data.images.forEach(function (res, index) {
-            const item = createPreviewElement('img', res.shortcode, 'media-image-' + index);
+        data.url.forEach(function (res, index) {
+            const item = createPreviewElement(res.isVideo ? 'video' : 'img', res.shortcode, 'media-image-' + index);
             grid.appendChild(item);
         });
 
@@ -274,10 +262,12 @@ downloadBtn.addEventListener('click', async function () {
     hideError();
     downloadButtons.innerHTML = '';
 
-    let inputURL = inputMedia.value.trim();
+    let inputURL = inputMedia.value;
 
     if (!inputURL)
         return;
+
+    inputURL = inputURL.trim();
 
     try {
         downloadBtn.innerHTML = '<span class="loading"></span>';

@@ -39,6 +39,7 @@ Dự án sử dụng file `.env` để lưu trữ các thông tin cấu hình. B
 # System
 PORT=8000
 SSL=false
+AUTO_UPDATE=false
 
 # Google
 GMAIL=

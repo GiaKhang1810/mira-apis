@@ -96,7 +96,7 @@ routers.get('/api/get-reel-and-post', downloadReelAndPost);
 routers.post('/api/get-reel-and-post', downloadReelAndPost);
 
 async function getUser(req: Request, res: Response): Promise<void> {
-    const username: string | undefined = req.method === 'GET' ? req.query.username : req.body.username;
+    const username: string | undefined = (req.method === 'GET' ? req.query : req.body).username;
     
 }
 routers.get('/api/get-user-info', getUser);

@@ -184,7 +184,7 @@ export async function getWatchAndReel(videoID: string): Promise<GetWatchAndReel.
     const body: GetWatchAndReel.OriDetails = JSON.parse(response.body);
 
     if (body.error) {
-        const error: Error = new Error('No access to resources');
+        const error: Error = new Error(body.error?.message);
         error.name = '403';
         throw error;
     }

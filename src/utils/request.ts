@@ -13,7 +13,7 @@ export class CookieManager {
         }
     }
 
-    constructor(cookies?: Array<string> | string, url?: string | Array<string> | string) {
+    constructor(cookies?: Array<string> | string, url?: Array<string> | string) {
         if (!cookies)
             return;
 
