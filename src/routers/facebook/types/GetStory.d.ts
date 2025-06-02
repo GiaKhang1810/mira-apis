@@ -16,8 +16,8 @@ export namespace GetStory {
         userID: string;
         name: string;
         title: string;
-        publishedAt: number;
-        react_total: number;
+        publishedAt?: number;
+        react_total?: number;
         videos: Array<OutputVideo>;
     }
 
@@ -71,21 +71,39 @@ export namespace GetStory {
 
     export interface OriDetails {
         data: {
-            nodes: [
-                {
-                    owner: OwnerDetails;
-                    unified_stories: {
-                        edges: [
-                            {
-                                node: Edges;
-                            }
-                        ];
-                    }
+            nodes: Array<{
+                owner: OwnerDetails;
+                unified_stories: {
+                    edges: [
+                        {
+                            node: Edges;
+                        }
+                    ];
                 }
-            ];
+            }>;
         }
         extensions: {
             all_video_dash_prefetch_representations: Array<{ video_id: string; }>;
+        }
+    }
+
+    export interface OriDetailsExtra {
+        data: {
+            bucket: {
+                story_bucket_owner: OwnerDetails;
+                name: string;
+                unified_stories: {
+                    edges: Array<{
+                        node: {
+                            attachments: Array<{
+                                media: {
+                                    id: string;
+                                }
+                            }>;
+                        }
+                    }>;
+                }
+            }
         }
     }
 }

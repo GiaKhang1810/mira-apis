@@ -1,10 +1,16 @@
 import { Request, Response } from 'express';
-import { resolve } from 'path';
-import { readdirSync, createReadStream, ReadStream } from 'fs';
-import { getType } from 'mime';
+import { getExtension } from 'mime';
+import { Readable } from 'stream';
+import request from '@utils/request';
 import cout from '@utils/cout';
 
-const directory: string = resolve(__dirname, '..', '..', 'database', process.env.CACHE_DIRECTORY ?? 'cache');
+function isURL(url: string): boolean {
+    try {
+        return new URL(url) instanceof URL;
+    } catch {
+        return false;
+    }
+}
 
 export function Redirect(req: Request, res: Response): void {
     res.redirect(302, '/tools/scraper');
@@ -15,45 +21,33 @@ export function Scraper(req: Request, res: Response): void {
     res.render('tools/scraper');
 }
 
-function getFileFromShortcode(shortcode: string): string {
-    const files: Array<string> = readdirSync(directory);
-    const found: string | undefined = files.find((file: string): boolean => file.startsWith(shortcode + '.'));
-
-    if (!found) {
-        const error = new Error('Shortcode not found.');
-        error.name = '404';
-        throw error;
-    }
-
-    return found;
-}
-
-export function GetMedia(req: Request, res: Response): void {
+export async function GetMedia(req: Request, res: Response): Promise<void> {
+    const url: string | undefined = (req.method === 'GET' ? req.query : req.body).url;
     const shortcode: string | undefined = (req.method === 'GET' ? req.query : req.body).shortcode;
-    const download: boolean = (req.method === 'GET' ? req.query : req.body).download ?? false;
+    const download: boolean = (req.method === 'GET' ? req.query : req.body).download === 'true';
 
     try {
-        if (!shortcode) {
-            const error: Error = new Error('Missing \'shortcode\'.');
+        if (!url || !shortcode) {
+            const error: Error = new Error('Missing \'' + (url ? 'url' : 'shortcode') + '\'.');
             error.name = '404';
             throw error;
         }
 
-        const found: string = getFileFromShortcode(shortcode);
-        const filePath: string = resolve(directory, found);
-
-        res.status(200);
-        res.type(getType(filePath) ?? 'application/octet-stream');
-        res.setHeader('Content-Disposition', 'inline; filename="' + found + '"');
-
-
-        if (download) {
-            res.download(filePath);
-            return;
+        if (!isURL(url)) {
+            const error: Error = new Error('Is that a url?');
+            error.name = '400';
+            throw error;
         }
 
-        const streamer: ReadStream = createReadStream(filePath);
-        streamer.on('error', function (error: Error): void {
+        const response: RequestURL.Response<Readable> = await request.get<Readable>(url, undefined, { responseType: 'stream' });
+        const content: string = response.headers['content-type'];
+        const ext: string = getExtension(content) ?? 'bin';
+        const filename: string = shortcode + '.' + (ext === 'webp' ? 'jpeg' : ext);
+
+        res.type(filename);
+        res.setHeader('Content-Disposition', (download ? 'attachment' : 'inline') + '; filename="' + filename + '"');
+
+        response.body.on('error', function (error: Error): void {
             cout.error('tools.GetMedia', error);
 
             if (!res.headersSent) {
@@ -67,10 +61,10 @@ export function GetMedia(req: Request, res: Response): void {
             res.destroy();
         });
 
-        streamer.pipe(res);
+        response.body.pipe(res);
     } catch (error: any) {
-        if (error.name === '404') {
-            res.status(404);
+        if (error.name === '404' || error.name === '400') {
+            res.status(parseInt(error.name));
             res.json({
                 message: error.message
             });

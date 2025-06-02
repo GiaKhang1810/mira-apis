@@ -1,1 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
+import express, { Router } from 'express';
+
+const routers: Router = express.Router();
+
+
+export default routers;

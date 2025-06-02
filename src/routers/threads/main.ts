@@ -1,8 +1,6 @@
 import { Request } from '@utils/request';
 import { JSDOM as DOM } from 'jsdom';
 import { GetPostDetails } from './types';
-import writer from '@utils/writer';
-import { basename } from 'path';
 
 const requestOptions: RequestURL.Options = {
     headers: {
@@ -79,33 +77,21 @@ export async function getPostDetails(url: string): Promise<GetPostDetails.Output
         }
 
     if (data.carousel_media) {
-        const queue: Array<Promise<Writer.Response>> = [];
-
         for (let i: number = 0; i < data.carousel_media.length; i++) {
             const media: GetPostDetails.Media = data.carousel_media[i];
 
-            if (media.video_versions && media.video_versions.length > 0) {
+            if (media.video_versions && media.video_versions.length > 0)
                 output.videos.push(media.video_versions[0].url);
-                queue.push(writer.download(media.video_versions[0].url));
-            } else if (media.image_versions2 && media.image_versions2.candidates.length > 0) {
+            else if (media.image_versions2 && media.image_versions2.candidates.length > 0)
                 output.images.push(media.image_versions2.candidates[0]);
-                queue.push(writer.download(media.image_versions2.candidates[0].url));
-            }
         }
-
-        await Promise.all(queue);
     } else {
-        if (data.video_versions && data.video_versions.length > 0) {
+        if (data.video_versions && data.video_versions.length > 0)
             output.videos.push(data.video_versions[0].url);
-            await writer.download(data.video_versions[0].url);
-        } else if (data.image_versions2 && data.image_versions2.candidates.length > 0) {
+        else if (data.image_versions2 && data.image_versions2.candidates.length > 0)
             output.images.push(data.image_versions2.candidates[0]);
-            await writer.download(data.image_versions2.candidates[0].url);
-        } else if (data.audio) {
+        else if (data.audio)
             output.audio = data.audio.audio_src;
-            const file: string = basename(data.audio.audio_src).split('.')[0] + '.mp3';
-            await writer.download(data.audio.audio_src, file);
-        }
     }
 
     return output;

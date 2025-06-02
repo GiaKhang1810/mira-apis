@@ -68,3 +68,10 @@ function getDomain(url) {
     const parser = new URL(url);
     return parser.hostname.split('.').filter(Boolean)[1];
 }
+
+function buildData(url, shortcode) {
+    return {
+        url,
+        shortcode
+    }
+}

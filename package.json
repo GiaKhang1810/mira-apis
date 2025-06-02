@@ -1,6 +1,6 @@
 {
     "name": "mira-apis",
-    "version": "1.7.2",
+    "version": "1.7.3",
     "description": "A simple server and client, providing convenient features for users",
     "main": "dist/index",
     "scripts": {
@@ -34,8 +34,10 @@
         "@types/jsdom": "^21.1.7",
         "@types/mime": "^3.0.4",
         "@types/node": "^22.13.10",
+        "@types/qs": "^6.14.0",
         "@types/sequelize": "^4.28.20",
         "@types/sqlite3": "^3.1.11",
+        "@types/totp-generator": "^0.0.8",
         "@types/ws": "^8.18.1",
         "@typescript-eslint/eslint-plugin": "^8.29.0",
         "@typescript-eslint/parser": "^8.29.0",
@@ -56,8 +58,10 @@
         "express": "^4.21.2",
         "jsdom": "^26.1.0",
         "mime": "^2.6.0",
+        "qs": "^6.14.0",
         "sequelize": "^6.37.6",
         "sqlite3": "^5.1.7",
+        "totp-generator": "^1.0.0",
         "ws": "^8.18.2"
     }
 }

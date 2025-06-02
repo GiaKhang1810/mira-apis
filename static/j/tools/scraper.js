@@ -50,15 +50,15 @@ async function fetchData(url, input) {
     });
 
     if (response.status !== 200)
-        throw new Error('Server cannot process the request. Please try again later.');
+        throw new Error((await response.json()).message);
 
     return await response.json();
 }
 
-function createSinglePreviewElement(type, src) {
+function createSinglePreviewElement(type, data) {
     const item = document.createElement('div');
     const media = document.createElement(type);
-    media.src = '/tools/api/get-media?shortcode=' + src;
+    media.src = '/tools/api/get-media?shortcode=' + data.shortcode + '&url=' + encodeURIComponent(data.url);
 
     if (type === 'video' || type === 'audio') {
         media.controls = true;
@@ -87,7 +87,7 @@ function createSinglePreviewElement(type, src) {
     button.style.display = 'block';
     button.style.margin = '1rem auto 0';
     button.appendChild(span);
-    button.onclick = () => window.location.href = '/tools/api/get-media?download=true&shortcode=' + src;
+    button.onclick = () => window.location.href = '/tools/api/get-media?download=true&shortcode=' + data.shortcode + '&url=' + encodeURIComponent(data.url);
 
     item.appendChild(media);
     downloadButtons.appendChild(button);
@@ -95,11 +95,11 @@ function createSinglePreviewElement(type, src) {
     return item;
 }
 
-function createPreviewElement(type, src, id) {
+function createPreviewElement(type, data, id) {
     const item = document.createElement('div');
     item.className = 'media-item';
     const media = document.createElement(type);
-    media.src = '/tools/api/get-media?shortcode=' + src;
+    media.src = '/tools/api/get-media?shortcode=' + data.shortcode + '&url=' + encodeURIComponent(data.url);
 
     if (type === 'video' || type === 'audio') {
         media.controls = true;
@@ -115,7 +115,7 @@ function createPreviewElement(type, src, id) {
     const button = document.createElement('button');
     button.className = 'download-hover-btn';
     button.textContent = '⬇ Download';
-    button.onclick = () => window.location.href = '/tools/api/get-media?download=true&shortcode=' + src;
+    button.onclick = () => window.location.href = '/tools/api/get-media?download=true&shortcode=' + data.shortcode + '&url=' + encodeURIComponent(data.url);
 
     item.appendChild(media);
     item.appendChild(button);
@@ -135,7 +135,7 @@ function createMediaPreview(domain, data) {
             grid.className = 'media-grid';
 
             data.image.list.forEach(function (res, index) {
-                const item = createPreviewElement('img', res.display.uri.split('/').pop(), 'media-image-' + index);
+                const item = createPreviewElement('img', buildData(res.display.other[0], data.owner.userID + '_' + index), 'media-image-' + index);
                 grid.appendChild(item);
             });
 
@@ -144,7 +144,7 @@ function createMediaPreview(domain, data) {
         }
 
         const type = data.image && data.image.list.length === 1 ? 'img' : data.video ? 'video' : 'audio';
-        const src = (type === 'img' ? data.image.list[0].display.uri : type === 'video' ? (data.video?.withoutWatermark?.uri ?? data.video?.playAddr?.uri) : data.music.url.uri).split('/').pop();
+        const src = buildData(type === 'img' ? data.image.list[0].display.other[0] : type === 'video' ? (data.video?.withoutWatermark?.other[0] ?? data.video?.playAddr?.other[0]) : data.music.url.other[0], data.owner.userID);
         const item = createSinglePreviewElement(type, src);
         mediaPreviewContainer.appendChild(item);
 
@@ -152,14 +152,14 @@ function createMediaPreview(domain, data) {
     }
 
     if (domain === 'facebook') {
-        title.textContent = 'No title available';
+        title.textContent = data.title.length > 0 ? data.title : 'No title available';
         if (data.videos && data.videos.length > 1) {
             const grid = document.createElement('div');
             grid.className = 'media-grid';
-            info.textContent = `Posted by ${data.name} on ${new Date(data.publishedAt * 1000).toLocaleDateString()}`;
+            info.textContent = 'Posted by ' + data.name + (data.publishedAt ? ' on ' + new Date(data.publishedAt * 1000).toLocaleDateString() : '');
 
             data.videos.forEach(function (res, index) {
-                const item = createPreviewElement('video', res.id, 'media-video-' + index);
+                const item = createPreviewElement('video', buildData(res.url, res.id), 'media-video-' + index);
                 grid.appendChild(item);
             });
 
@@ -169,14 +169,14 @@ function createMediaPreview(domain, data) {
 
         if (data.videos && data.videos.length === 1) {
             info.textContent = `Posted by ${data.name} on ${new Date(data.publishedAt * 1000).toLocaleDateString()}`;
-            const item = createSinglePreviewElement('video', data.videos[0].id);
+            const item = createSinglePreviewElement('video', buildData(data.videos[0].url, data.videos[0].id));
 
             mediaPreviewContainer.appendChild(item);
             return;
         }
 
         info.textContent = `Posted by ${data.author} on ${new Date(data.publishedAt.replace(/(\+0000)$/, 'Z')).toLocaleDateString()}`;
-        const item = createSinglePreviewElement('video', data.videoID);
+        const item = createSinglePreviewElement('video', buildData(data.url, data.videoID));
         mediaPreviewContainer.appendChild(item);
         return;
     }
@@ -186,7 +186,8 @@ function createMediaPreview(domain, data) {
         info.textContent = 'Posted by ' + data.owner.name + ' on ' + new Date(data.createAt * 1000).toLocaleDateString();;
 
         if (data.url.length === 1) {
-            const item = createSinglePreviewElement(data.url[0].isVideo ? 'video' : 'img', data.url[0].shortcode);
+            const isVideo = data.url[0].isVideo;
+            const item = createSinglePreviewElement(isVideo ? 'video' : 'img', buildData(data.url[0][isVideo ? 'video_url' : 'display_url'], data.url[0].shortcode));
             mediaPreviewContainer.appendChild(item);
             return;
         }
@@ -195,7 +196,8 @@ function createMediaPreview(domain, data) {
         grid.className = 'media-grid';
 
         data.url.forEach(function (res, index) {
-            const item = createPreviewElement(res.isVideo ? 'video' : 'img', res.shortcode, 'media-image-' + index);
+            const isVideo = res.isVideo;
+            const item = createPreviewElement(isVideo ? 'video' : 'img', buildData(res[isVideo ? 'video_url' : 'display_url'], res.shortcode), 'media-image-' + index);
             grid.appendChild(item);
         });
 
@@ -212,7 +214,7 @@ function createMediaPreview(domain, data) {
             grid.className = 'media-grid';
 
             data.images.forEach(function (res, index) {
-                const item = createPreviewElement('img', basename(res.url), 'media-image-' + index);
+                const item = createPreviewElement('img', buildData(res.url, data.owner.id + '_' + index), 'media-image-' + index);
                 grid.appendChild(item);
             });
 
@@ -221,19 +223,19 @@ function createMediaPreview(domain, data) {
         }
 
         if (data.videos.length === 1 && data.images.length === 0) {
-            const item = createSinglePreviewElement('video', basename(data.videos[0]));
+            const item = createSinglePreviewElement('video', buildData(data.videos[0], data.owner.id));
             mediaPreviewContainer.appendChild(item);
             return;
         }
 
         if (data.videos.length === 0 && data.images.length === 1) {
-            const item = createSinglePreviewElement('img', basename(data.images[0].url));
+            const item = createSinglePreviewElement('img', buildData(data.images[0].url, data.owner.id));
             mediaPreviewContainer.appendChild(item);
             return;
         }
 
         if (data.audio) {
-            const item = createSinglePreviewElement('audio', basename(data.audio));
+            const item = createSinglePreviewElement('audio', buildData(data.audio, data.onwer.id));
             mediaPreviewContainer.appendChild(item);
             return;
         }
@@ -246,9 +248,9 @@ function createMediaPreview(domain, data) {
         newData.forEach(function (res, index) {
             let item;
             if (typeof res === 'string')
-                item = createPreviewElement('video', basename(res), 'media-video-' + index);
+                item = createPreviewElement('video', buildData(res, data.owner.id + '_' + index), 'media-video-' + index);
             else
-                item = createPreviewElement('img', basename(res.url), 'media-image-' + index);
+                item = createPreviewElement('img', buildData(res.url, data.owner.id + '_' + index), 'media-image-' + index);
 
             grid.appendChild(item);
         });
@@ -327,7 +329,7 @@ downloadBtn.addEventListener('click', async function () {
         info.textContent = '';
         resultContainer.classList.add('hidden');
         mediaPreviewContainer.innerHTML = '';
-        showError(error.message);
+        showError(error.response ? error.response.message : error.message);
     } finally {
         downloadBtn.disabled = false;
         downloadBtn.innerHTML = '<span>Download</span><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>';

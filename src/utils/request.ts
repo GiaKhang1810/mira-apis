@@ -1,6 +1,22 @@
 import { EventEmitter } from 'events';
 import axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios';
 import types from './types';
+import { stringify } from 'qs';
+
+function applyParams(url: string, params?: Record<string, any>): string {
+    if (!params || Object.keys(params).length === 0)
+        return url;
+
+    const [baseURL, query]: Array<string> = url.split('?');
+    const newQuery: string = stringify(params, { arrayFormat: 'brackets', encodeValuesOnly: true });
+    let finalURL: string;
+    if (query)
+        finalURL = baseURL + '?' + query + '&' + newQuery;
+    else
+        finalURL = baseURL + '?' + newQuery;
+
+    return finalURL;
+}
 
 export class CookieManager {
     private store: RequestURL.CookieStore = {}
@@ -115,7 +131,6 @@ export class Request extends EventEmitter {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36'
         },
         responseType: 'text',
-        timeout: 5000,
         core: 'axios'
     }
 
@@ -237,16 +252,7 @@ export class Request extends EventEmitter {
         if ((options.core ?? this.defaultOptions.core) === 'fetch') {
             const baseURL: string | undefined = options.baseURL ?? this.defaultOptions.baseURL;
             url = baseURL && !/^https?:\/\//i.test(url) ? new URL(url, baseURL).toString() : url;
-
-            const params: Record<string, string | undefined> | undefined = options.params ?? this.defaultOptions.params
-            if (params && Object.keys(params).length > 0) {
-                const urlObj: URL = new URL(url);
-                for (const [key, value] of Object.entries(params)) {
-                    if (value !== undefined)
-                        urlObj.searchParams.append(key, value);
-                }
-                url = urlObj.toString();
-            }
+            url = applyParams(url, options.params ?? this.defaultOptions.params);
 
             const requestOptions: RequestInit = {
                 method,
@@ -348,7 +354,10 @@ export class Request extends EventEmitter {
             withCredentials: options.withCredentials ?? this.defaultOptions.withCredentials,
             validateStatus: options.validateStatus ?? this.defaultOptions.validateStatus,
             responseType: options.responseType ?? this.defaultOptions.responseType ?? 'text',
-            data: options.data
+            data: options.data,
+            paramsSerializer: {
+                serialize: (params: Record<string, any>): string => stringify(params, { arrayFormat: 'brackets', encodeValuesOnly: true })
+            }
         }
 
         return await this.axiosCore<T>(requestOptions, jar);

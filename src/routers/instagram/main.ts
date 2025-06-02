@@ -1,6 +1,5 @@
 import { Request, CookieManager } from '@utils/request';
 import { GetReelAndPost, GetUserInfo } from './types';
-import writer from '@utils/writer';
 
 const requestOptions: RequestURL.Options = {
     headers: {
@@ -152,13 +151,6 @@ export async function getReelAndPost(shortcode: string, retries: number = 0): Pr
 
             output.url.push(compoment);
         }
-
-        const queue: Array<Promise<Writer.Response>> = [];
-
-        for (const res of output.url)
-            queue.push(writer.download(res.isVideo && res.video_url ? res.video_url : res.display_url, res.shortcode));
-
-        await Promise.all(queue);
 
         return output;
     } catch (error: any) {

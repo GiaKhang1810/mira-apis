@@ -81,7 +81,7 @@ namespace RequestURL {
         validateStatus?: (status: number) => boolean;
         data?: any;
         method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS' | 'HEAD';
-        core?: 'axios' | 'fetch'
+        core?: 'axios' | 'fetch';
     }
 
     export interface Response<T> {

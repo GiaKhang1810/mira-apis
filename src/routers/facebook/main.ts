@@ -1,18 +1,13 @@
-import { Request, CookieManager } from '@utils/request';
-import {
-    GetUserID,
-    GetStory,
-    GetWatchAndReel
-} from './types';
-import writer from '@utils/writer';
+import { CookieManager, Request } from '@utils/request';
+import { GetUserID, GetStory, GetWatchAndReel } from './types';
 
 const requestOptions: RequestURL.Options = {
     headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
     },
     maxRedirect: 0,
-    jar: new CookieManager(process.env.FACEBOOK_COOKIE, ['https://www.facebook.com/', 'https://graph.facebook.com/']),
-    responseType: 'text'
+    responseType: 'text',
+    core: 'fetch'
 }
 
 const request: Request = new Request(requestOptions);
@@ -28,9 +23,9 @@ function getGUID(): string {
     return id;
 }
 
-function createData(docID: string, variables: Record<string, any>): URLSearchParams {
+function createData(docID: string, variables: Record<string, any>, dtsg: boolean = false): URLSearchParams {
     return new URLSearchParams({
-        fb_dtsg: process.env.DTSG!,
+        fb_dtsg: dtsg && process.env.DTSG ? process.env.DTSG : 'Đây là mã fb_dtsg:D',
         variables: JSON.stringify(variables),
         server_timestamps: 'true',
         doc_id: docID
@@ -107,7 +102,7 @@ export async function getStoryDetails(albumID: string, storyID?: string): Promis
     const data: URLSearchParams = createData('9476908792385858', {
         bucketIDs: storyID ? [albumID, storyID] : albumID,
         scale: 1,
-        blur: 10,
+        blur: 100,
         shouldEnableArmadilloStoryReply: true,
         shouldEnableLiveInStories: true,
         feedbackSource: '65',
@@ -121,6 +116,66 @@ export async function getStoryDetails(albumID: string, storyID?: string): Promis
 
     const response: RequestURL.Response<string> = await request.post<string>('https://www.facebook.com/api/graphql/', undefined, { data });
     const info: GetStory.OriDetails = JSON.parse(response.body.split('\n')[0]);
+
+    if (info?.data?.nodes?.length === 0) {
+        const extraData: URLSearchParams = createData('9783567355043674', {
+            blur: 100,
+            bucketID: albumID,
+            feedbackSource: 65,
+            feedLocation: 'COMET_MEDIA_VIEWER',
+            focusCommentID: null,
+            initialBucketID: albumID,
+            initialLoad: true,
+            isStoriesArchive: false,
+            scale: 1,
+            shouldDeferLoad: false,
+            shouldEnableArmadilloStoryReply: true,
+            shouldEnableLiveInStories: true,
+            __relay_internal__pv__IsWorkUserrelayprovider: false,
+            __relay_internal__pv__StoriesLWRVariantrelayprovider: 'www_new_reactions'
+        }, true);
+        const jar: CookieManager = new CookieManager(process.env.FACEBOOK_COOKIE, 'https://www.facebook.com/');
+        const extraResponse: RequestURL.Response<string> = await request.post<string>('https://www.facebook.com/api/graphql/', jar, { data: extraData });
+        const extra: GetStory.OriDetailsExtra = JSON.parse(extraResponse.body.split('\n')[0]);
+
+        if (!extra.data?.bucket) {
+            const error: Error = new Error('No access to resources.');
+            error.name = '400';
+            throw error;
+        }
+
+        const owner: GetStory.OwnerDetails = extra?.data?.bucket?.story_bucket_owner;
+        const output: GetStory.OutputDetails = {
+            userID: owner?.id,
+            name: owner?.name,
+            title: extra?.data?.bucket?.name,
+            videos: []
+        }
+
+        const queue: Array<Promise<GetWatchAndReel.OutputDetails>> = [];
+
+        for (let dash of extra?.data?.bucket?.unified_stories?.edges)
+            queue.push(getWatchAndReel(dash?.node?.attachments?.[0]?.media?.id));
+
+        const queued: Array<GetWatchAndReel.OutputDetails> = await Promise.all(queue);
+
+        for (let dash of queued) {
+            const video: GetStory.OutputVideo = {
+                id: dash?.videoID,
+                url: dash?.url,
+                thumbnails: dash?.thumbnails?.map((item: GetWatchAndReel.ComponentThumbnail): GetStory.ComponentNail => ({
+                    id: item?.id,
+                    height: item?.height,
+                    width: item?.width,
+                    url: item?.uri
+                }))
+            }
+            output.videos.push(video);
+        }
+
+        return output;
+    }
+
     const owner: GetStory.OwnerDetails = info?.data?.nodes[0]?.owner;
     const edges: GetStory.Edges = info?.data?.nodes[0]?.unified_stories.edges[0]?.node;
     const media: GetStory.Media = edges?.attachments[0].media;
@@ -144,13 +199,13 @@ export async function getStoryDetails(albumID: string, storyID?: string): Promis
 
         for (let dash of queued) {
             const video: GetStory.OutputVideo = {
-                id: dash.videoID,
-                url: dash.url,
-                thumbnails: dash.thumbnails.map((item: GetWatchAndReel.ComponentThumbnail): GetStory.ComponentNail => ({
-                    id: item.id,
-                    height: item.height,
-                    width: item.width,
-                    url: item.uri
+                id: dash?.videoID,
+                url: dash?.url,
+                thumbnails: dash?.thumbnails?.map((item: GetWatchAndReel.ComponentThumbnail): GetStory.ComponentNail => ({
+                    id: item?.id,
+                    height: item?.height,
+                    width: item?.width,
+                    url: item?.uri
                 }))
             }
             output.videos.push(video);
@@ -158,13 +213,13 @@ export async function getStoryDetails(albumID: string, storyID?: string): Promis
     } else {
         const watch: GetWatchAndReel.OutputDetails = await getWatchAndReel(media.videoId);
         const video: GetStory.OutputVideo = {
-            id: media.videoId,
-            url: watch.url,
-            thumbnails: watch.thumbnails.map((item: GetWatchAndReel.ComponentThumbnail): GetStory.ComponentNail => ({
-                id: item.id,
-                height: item.height,
-                width: item.width,
-                url: item.uri
+            id: media?.videoId,
+            url: watch?.url,
+            thumbnails: watch?.thumbnails.map((item: GetWatchAndReel.ComponentThumbnail): GetStory.ComponentNail => ({
+                id: item?.id,
+                height: item?.height,
+                width: item?.width,
+                url: item?.uri
             }))
         }
         output.videos.push(video);
@@ -205,8 +260,6 @@ export async function getWatchAndReel(videoID: string): Promise<GetWatchAndReel.
             uri: item?.uri
         }))
     }
-
-    await writer.download(output.url, output.videoID);
 
     return output;
 }

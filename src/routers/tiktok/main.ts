@@ -1,6 +1,5 @@
 import { Request } from '@utils/request';
 import { GetAddrDetails } from './types';
-import writer from '@utils/writer';
 
 const request: Request = new Request({ core: 'fetch' });
 
@@ -127,23 +126,6 @@ export async function getAddrDetails(awemeID: string): Promise<GetAddrDetails.Ou
                 userWatermark: getComponentOutputURL(item?.user_watermark_image)
             }))
         }
-
-    if (output.image) {
-        const queue: Array<Promise<Writer.Response>> = [];
-
-        for (const image of output.image.list)
-            queue.push(writer.download(image.display.other[0], image.display.uri.split('/').pop() + '.jpg'));
-
-        await Promise.all(queue);
-    }
-
-    if (output.video.withoutWatermark)
-        await writer.download(output.video.withoutWatermark.other[0], output.video.withoutWatermark.uri.split('/').pop());
-    else
-        await writer.download(output.video.playAddr.other[0], output.video.playAddr.uri.split('/').pop());
-
-    if (output.music.url)
-        await writer.download(output.music.url.other[0], output.music.id + '.mp3');
 
     return output;
 }
