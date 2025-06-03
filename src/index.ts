@@ -59,7 +59,7 @@ async function getGoogleAuth(): Promise<OAuth2Client> {
     return client;
 }
 
-async function getOrRefreshDtsg(): Promise<void> {
+async function getOrRefreshDtsg(firstRun: boolean = true): Promise<void> {
     type FORM_DATA = Record<string, any>;
 
     type ANDROID_DEVICE = {
@@ -247,9 +247,11 @@ async function getOrRefreshDtsg(): Promise<void> {
             return cout.warn('Enviroment.getOrRefreshDtsg', 'Unable to get dtsg.');
 
         process.env.DTSG = dtsg[1];
-        cout.info('Environment', 'Retrieved token and dtsg.');
+        cout.info('Environment', firstRun ? 'Retrieved token and dtsg.' : 'Refreshed token and dtsg.');
     } catch (error: any) {
         cout.error('Enviroment.getOrRefreshDtsg', error);
+    } finally {
+        setTimeout(getOrRefreshDtsg, 24 * 3600 * 1000, false);
     }
 }
 

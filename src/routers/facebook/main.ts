@@ -33,7 +33,7 @@ function createData(docID: string, variables: Record<string, any>, dtsg: boolean
 }
 
 export async function getRedirectURL(url: string): Promise<string> {
-    const response: RequestURL.Response<string> = await request.get<string>(url, undefined, {
+    const response: RequestURL.Response<string> = await request.get<string>(url, new CookieManager(process.env.FACEBOOK_COOKIE, 'https://www.facebook.com/'), {
         validateStatus: (status: number): boolean => status === 302
     });
     const location: string | undefined = response.headers.location;

@@ -95,12 +95,6 @@ async function getRedirect(req: Request, res: Response): Promise<void> {
             throw error;
         }
 
-        if (!isShareURL(url)) {
-            const error: Error = new Error('Invalid Facebook share URL.');
-            error.name = '400';
-            throw error;
-        }
-
         const redirectURL: string = await getRedirectURL(url);
 
         res.status(200);
@@ -174,7 +168,7 @@ async function downloadWatchAndReel(req: Request, res: Response): Promise<void> 
         if (isShareURL(url))
             url = await getRedirectURL(url);
 
-        const match: RegExpMatchArray | null = /videos\/\?v=(\d+)/g.exec(url) || /videos\/(\d+)/g.exec(url) || /(\d+)/g.exec(url);
+        const match: RegExpMatchArray | null = /videos\/\?v=(\d+)/g.exec(url) || /videos\/(\d+)/g.exec(url) || url.match(/\/videos\/(?:[^/]+\/)?(\d+)/) || /reel\/(\d+)/g.exec(url);
         
         if (!match) {
             const error: Error = new Error('Invalid Facebook video URL.');

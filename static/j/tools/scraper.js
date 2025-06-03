@@ -152,7 +152,7 @@ function createMediaPreview(domain, data) {
     }
 
     if (domain === 'facebook') {
-        title.textContent = data.title.length > 0 ? data.title : 'No title available';
+        title.textContent = data.title && data.title.length > 0 ? data.title : data.desc ? data.desc : 'No title available';
         if (data.videos && data.videos.length > 1) {
             const grid = document.createElement('div');
             grid.className = 'media-grid';
@@ -235,7 +235,7 @@ function createMediaPreview(domain, data) {
         }
 
         if (data.audio) {
-            const item = createSinglePreviewElement('audio', buildData(data.audio, data.onwer.id));
+            const item = createSinglePreviewElement('audio', buildData(data.audio, data.owner.id));
             mediaPreviewContainer.appendChild(item);
             return;
         }
@@ -291,8 +291,16 @@ downloadBtn.addEventListener('click', async function () {
                     throw new Error('Please enter a valid Facebook URL.');
 
                 if (/^https:\/\/www\.facebook\.com\/share\/(p\/|r\/|v\/)?[\w\d]+\/?$/.test(inputURL)) {
-                    response = await fetchData('/facebook/api/get-redirect-url', inputURL);
-                    inputURL = response.redirectURL;
+                    const maybeWatch = inputURL.includes('/v/');
+                    let refresh = true;
+
+                    while (refresh) {
+                        response = await fetchData('/facebook/api/get-redirect-url', inputURL);
+                        inputURL = response.redirectURL;
+
+                        if (!inputURL.includes('story.php') || !maybeWatch)
+                            refresh = false;
+                    }
                 }
 
                 if (/(?:\/story\.php\?story_fbid=\d+&id=\d+|\/stories\/\d+(?:\/[\w=]+|\?source=profile_highlight)?)/.test(inputURL))

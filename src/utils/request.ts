@@ -3,21 +3,6 @@ import axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios';
 import types from './types';
 import { stringify } from 'qs';
 
-function applyParams(url: string, params?: Record<string, any>): string {
-    if (!params || Object.keys(params).length === 0)
-        return url;
-
-    const [baseURL, query]: Array<string> = url.split('?');
-    const newQuery: string = stringify(params, { arrayFormat: 'brackets', encodeValuesOnly: true });
-    let finalURL: string;
-    if (query)
-        finalURL = baseURL + '?' + query + '&' + newQuery;
-    else
-        finalURL = baseURL + '?' + newQuery;
-
-    return finalURL;
-}
-
 export class CookieManager {
     private store: RequestURL.CookieStore = {}
 
@@ -33,7 +18,7 @@ export class CookieManager {
         if (!cookies)
             return;
 
-        if (url && !Array.isArray(url))
+        if (url && !types.isArray(url))
             url = [url];
 
         if (url) {
@@ -199,7 +184,7 @@ export class Request extends EventEmitter {
                 (jar ? jar : this.jar).setCookie(rawCookie, url);
 
             const customResponse: RequestURL.Response<T> = {
-                url,
+                url: response?.request?.res?.responseUrl ?? response?.request?._redirectable?._currentUrl,
                 method: response?.config?.method,
                 status: response?.status,
                 headers: response?.headers,
@@ -230,7 +215,7 @@ export class Request extends EventEmitter {
         });
         const response: AxiosResponse<T> = await this.instance.request<T>(requestOptions);
         return {
-            url: response.config.url,
+            url: response?.request?.res?.responseUrl ?? response?.request?._redirectable?._currentUrl,
             method: response.config.method,
             config: response.config,
             status: response.status,
@@ -252,7 +237,12 @@ export class Request extends EventEmitter {
         if ((options.core ?? this.defaultOptions.core) === 'fetch') {
             const baseURL: string | undefined = options.baseURL ?? this.defaultOptions.baseURL;
             url = baseURL && !/^https?:\/\//i.test(url) ? new URL(url, baseURL).toString() : url;
-            url = applyParams(url, options.params ?? this.defaultOptions.params);
+            const params: Record<string, any> | undefined = options.params ?? this.defaultOptions.params;
+            if (params && Object.keys(params).length > 0) {
+                const queryString: string = stringify(params, { arrayFormat: 'brackets' });
+                const hasQuery: boolean = url.includes('?');
+                url += (hasQuery ? '&' : '?') + queryString;
+            }
 
             const requestOptions: RequestInit = {
                 method,
@@ -283,13 +273,13 @@ export class Request extends EventEmitter {
                         break;
                     case 'oauth1':
                         headers.Authorization = 'OAuth ' + [
-                            `oauth_consumer_key="${auth.consumerKey}"`,
-                            `oauth_token="${auth.token}"`,
-                            `oauth_signature_method="${auth.signatureMethod ?? 'HMAC-SHA1'}"`,
-                            `oauth_signature="${encodeURIComponent(auth.consumerSecret + '&' + auth.tokenSecret)}"`,
-                            `oauth_timestamp="${Math.floor(Date.now() / 1000)}"`,
-                            `oauth_nonce="${Math.random().toString(36).substring(2, 15)}"`,
-                            `oauth_version="1.0"`
+                            `oauth_consumer_key='${auth.consumerKey}'`,
+                            `oauth_token='${auth.token}'`,
+                            `oauth_signature_method='${auth.signatureMethod ?? 'HMAC-SHA1'}'`,
+                            `oauth_signature='${encodeURIComponent(auth.consumerSecret + '&' + auth.tokenSecret)}'`,
+                            `oauth_timestamp='${Math.floor(Date.now() / 1000)}'`,
+                            `oauth_nonce='${Math.random().toString(36).substring(2, 15)}'`,
+                            `oauth_version='1.0'`
                         ].join(', ');
                         break;
                     case 'oauth2':
@@ -305,7 +295,7 @@ export class Request extends EventEmitter {
 
                         break;
                     case 'digest':
-                        headers.Authorization = `Digest username="${auth.username}", password="${auth.password}", realm="${auth.realm ?? ''}", nonce="${auth.nonce ?? ''}", qop="${auth.qop ?? ''}", algorithm="${auth.algorithm ?? 'MD5'}"`;
+                        headers.Authorization = `Digest username='${auth.username}', password='${auth.password}', realm='${auth.realm ?? ''}', nonce='${auth.nonce ?? ''}', qop='${auth.qop ?? ''}', algorithm='${auth.algorithm ?? 'MD5'}'`;
                         break;
                 }
             }
@@ -321,7 +311,7 @@ export class Request extends EventEmitter {
                     stream: () => Promise.resolve(response.body)
                 }
                 const output: RequestURL.Response<T> = {
-                    url,
+                    url: response.url,
                     method,
                     status: response?.status,
                     headers: Object.fromEntries(response.headers.entries()),
@@ -415,3 +405,4 @@ export class Request extends EventEmitter {
 
 export const request: Request = new Request();
 export default request;
+
