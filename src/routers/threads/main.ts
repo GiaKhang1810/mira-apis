@@ -2,7 +2,7 @@ import { Request } from '@utils/request';
 import { JSDOM as DOM } from 'jsdom';
 import { GetPostDetails } from './types';
 
-const requestOptions: RequestURL.Options = {
+const requestOptions: Request.Options = {
     headers: {
         'Authority': 'www.threads.net',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -28,7 +28,7 @@ function createError(message: string, name: string): Error {
 }
 
 export async function getPostDetails(url: string): Promise<GetPostDetails.OutputDetails> {
-    const response: RequestURL.Response<string> = await request.get<string>(url);
+    const response: Request.Response<string> = await request.get<string>(url);
     const dom: DOM = new DOM(response.body);
     const scripts: Array<HTMLScriptElement> = Array.from(dom.window.document.querySelectorAll('script'));
 

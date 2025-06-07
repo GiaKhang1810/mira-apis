@@ -20,6 +20,24 @@ function clearLine(): void {
         process.stdout.write('\n');
 }
 
+export namespace Cout {
+    export type Load = (text: string, cycle?: number) => void;
+    export type Success = (text: string) => void;
+    export type Fail=  (text: string) => void;
+    export type Wall = (char?: string, lent?: number) => void;
+    export type Info = (name: string, text: string, date?: number) => void;
+    export type Errors = (name: string, error: Error, date?: number) => void;
+    export interface Model {
+        load: Load;
+        success: Success;
+        fail: Fail;
+        wall: Wall;
+        info: Info;
+        warn: Info;
+        error: Errors;
+    }
+}
+
 const load: Cout.Load = (text: string, cycle: number = 80): void => {
     if (interval)
         clearInterval(interval);

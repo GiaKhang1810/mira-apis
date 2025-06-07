@@ -4,7 +4,7 @@ import { GetAddrDetails } from './types';
 const request: Request = new Request({ core: 'fetch' });
 
 export async function getRedirectURL(url: string): Promise<string> {
-    const response: RequestURL.Response<string> = await request.head<string>(url);
+    const response: Request.Response<string> = await request.head<string>(url);
     const location: string | undefined = response.headers.location;
 
     if (!location) {
@@ -32,7 +32,7 @@ function getComponentOutputURL(info: GetAddrDetails.ComponentOriURL): GetAddrDet
 }
 
 export async function getAddrDetails(awemeID: string): Promise<GetAddrDetails.OutputDetails> {
-    const response: RequestURL.Response<string> = await request.options<string>('https://api16-normal-c-alisg.tiktokv.com/aweme/v1/aweme/detail/', undefined, {
+    const response: Request.Response<string> = await request.options<string>('https://api16-normal-c-alisg.tiktokv.com/aweme/v1/aweme/detail/', undefined, {
         params: {
             aweme_id: awemeID
         }

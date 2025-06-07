@@ -13,11 +13,12 @@ import { google } from 'googleapis';
 import { TOTP as totp } from 'totp-generator';
 
 import cout from '@utils/cout';
-import request, { CookieManager } from '@utils/request';
+import request, { Session, Request as RequestURL } from '@utils/request';
 import space from '@utils/space';
 
-import database from './database';
 import checkAndUpdate from './updater';
+import database from './database';
+import userController from './control/user';
 import RoutesList from './routers';
 
 const cwd: string = process.cwd();
@@ -151,8 +152,8 @@ async function getOrRefreshDtsg(firstRun: boolean = true): Promise<void> {
                 'X-Fb-Client-Ip': 'True',
                 'X-Fb-Server-Cluster': 'True'
             },
-            data: new URLSearchParams(form),
-            responseType: 'json'
+            body: new URLSearchParams(form),
+            type: 'json'
         });
 
         return response.body;
@@ -237,8 +238,8 @@ async function getOrRefreshDtsg(firstRun: boolean = true): Promise<void> {
         const cookies: string = data.session_cookies.map((item: SessionCookie): string => item.name + '=' + item.value).join('; ');
         process.env.FACEBOOK_COOKIE = cookies;
 
-        const jar: CookieManager = new CookieManager(cookies, 'https://business.facebook.com/');
-        const response: RequestURL.Response<string> = await request.get<string>('https://business.facebook.com/content_management', jar, { responseType: 'text' });
+        const jar: Session = new Session(cookies, 'https://business.facebook.com/');
+        const response: RequestURL.Response<string> = await request.get<string>('https://business.facebook.com/content_management', jar, { type: 'text' });
         const body: string = response.body;
 
         const dtsg: RegExpMatchArray | null = body.match(/"DTSGInitData",\[],\{"token":"([^"]+)",/);
@@ -302,12 +303,8 @@ function getSSL(): Record<string, string> {
     app.use(express.urlencoded({ extended: true }));
     app.use('/s', express.static(dirStatic));
 
+    await userController(app);
     await applyRoutes(app);
-
-    app.get('/danh-cho-babi-cua-toi-do', function (req: Request, res: Response): void {
-        res.status(200);
-        res.render('heart');
-    });
 
     app.use('*', function (req: Request, res: Response): void {
         res.status(404);

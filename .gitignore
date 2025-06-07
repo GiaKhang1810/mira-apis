@@ -4,4 +4,7 @@ package-lock.json
 .env
 ssl/
 *.test.ts
+*.test.js
+*.log
+*.tmp
 .backup/

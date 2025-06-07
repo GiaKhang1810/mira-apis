@@ -61,14 +61,6 @@ CACHE_DIRECTORY=cache
 FACEBOOK_USERNAME=""
 FACEBOOK_PASSWORD=""
 FACEBOOK_TWO_FACTOR=""
-
-# Cookie
-ZING_COOKIE=
-
-# KEYS
-YOUTUBE_KEY=
-SEARCH_KEY=
-SEARCH_CX=
 ```
 
 > **Lưu ý:** Không chia sẻ file `.env` công khai để đảm bảo an toàn thông tin.

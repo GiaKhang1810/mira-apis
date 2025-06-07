@@ -1,5 +1,11 @@
 import 'express-serve-static-core';
 
+type File = {
+    name: string;
+    data: Buffer;
+    dir: string;
+}
+
 declare module 'express-serve-static-core' {
     export interface Request {
         userID?: string;

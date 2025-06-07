@@ -1,6 +1,6 @@
 {
     "name": "mira-apis",
-    "version": "1.7.3",
+    "version": "1.7.4",
     "description": "A simple server and client, providing convenient features for users",
     "main": "dist/index",
     "scripts": {
@@ -14,7 +14,9 @@
         "url": "git+https://github.com/GiaKhang1810/mira-apis.git"
     },
     "keywords": [
-        "mira"
+        "mira",
+        "api",
+        "typescript"
     ],
     "author": "KhanG (BE), Dưn (FE)",
     "license": "MIT",

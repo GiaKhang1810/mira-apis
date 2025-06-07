@@ -1,1 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
+import { Express } from 'express';
+
+export default async function authenticateController(app: Express): Promise<void> {
+    
+}

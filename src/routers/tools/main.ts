@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { getExtension } from 'mime';
 import { Readable } from 'stream';
-import request from '@utils/request';
+import request, { Request as RequestURL } from '@utils/request';
 import cout from '@utils/cout';
 
 function isURL(url: string): boolean {
@@ -19,6 +19,11 @@ export function Redirect(req: Request, res: Response): void {
 export function Scraper(req: Request, res: Response): void {
     res.status(200);
     res.render('tools/scraper');
+}
+
+export function Uploader(req: Request, res: Response): void {
+    res.status(200);
+    res.render('tools/upload');
 }
 
 export async function GetMedia(req: Request, res: Response): Promise<void> {
@@ -39,7 +44,7 @@ export async function GetMedia(req: Request, res: Response): Promise<void> {
             throw error;
         }
 
-        const response: RequestURL.Response<Readable> = await request.get<Readable>(url, undefined, { responseType: 'stream' });
+        const response: RequestURL.Response<Readable> = await request.get<Readable>(url, undefined, { type: 'stream' });
         const content: string = response.headers['content-type'];
         const ext: string = getExtension(content) ?? 'bin';
         const filename: string = shortcode + '.' + (ext === 'webp' ? 'jpeg' : ext);

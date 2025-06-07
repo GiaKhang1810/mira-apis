@@ -1,4 +1,4 @@
-import database from './database';
+import database, { DataBase } from './database';
 import modelUser from './model/user';
 import modelToken from './model/token';
 import cout from '@utils/cout';

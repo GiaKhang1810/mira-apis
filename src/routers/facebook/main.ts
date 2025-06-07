@@ -1,12 +1,12 @@
-import { CookieManager, Request } from '@utils/request';
+import { Session, Request } from '@utils/request';
 import { GetUserID, GetStory, GetWatchAndReel } from './types';
 
-const requestOptions: RequestURL.Options = {
+const requestOptions: Request.Options = {
     headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
     },
-    maxRedirect: 0,
-    responseType: 'text',
+    maxRedirects: 0,
+    type: 'text',
     core: 'fetch'
 }
 
@@ -33,8 +33,8 @@ function createData(docID: string, variables: Record<string, any>, dtsg: boolean
 }
 
 export async function getRedirectURL(url: string): Promise<string> {
-    const response: RequestURL.Response<string> = await request.get<string>(url, new CookieManager(process.env.FACEBOOK_COOKIE, 'https://www.facebook.com/'), {
-        validateStatus: (status: number): boolean => status === 302
+    const response: Request.Response<string> = await request.get<string>(url, new Session(process.env.FACEBOOK_COOKIE, 'https://www.facebook.com/'), {
+        confirmStatus: (status: number): boolean => status === 302
     });
     const location: string | undefined = response.headers.location;
 
@@ -85,7 +85,7 @@ export async function getUserID(username: string): Promise<string> {
         __relay_internal__pv__StoriesArmadilloReplyEnabledrelayprovider: false,
         __relay_internal__pv__StoriesRingrelayprovider: false
     });
-    const response: RequestURL.Response<string> = await request.post<string>('https://www.facebook.com/api/graphql/', undefined, { data });
+    const response: Request.Response<string> = await request.post<string>('https://www.facebook.com/api/graphql/', undefined, { body: data });
     const body: GetUserID = JSON.parse(response.body.split('\n')[0]);
     const userID: string = body.data?.serpResponse?.results?.edges[0]?.relay_rendering_strategy?.view_model?.profile?.id;
 
@@ -114,7 +114,7 @@ export async function getStoryDetails(albumID: string, storyID?: string): Promis
         __relay_internal__pv__IsWorkUserrelayprovider: false
     });
 
-    const response: RequestURL.Response<string> = await request.post<string>('https://www.facebook.com/api/graphql/', undefined, { data });
+    const response: Request.Response<string> = await request.post<string>('https://www.facebook.com/api/graphql/', undefined, { body: data });
     const info: GetStory.OriDetails = JSON.parse(response.body.split('\n')[0]);
 
     if (info?.data?.nodes?.length === 0) {
@@ -134,8 +134,8 @@ export async function getStoryDetails(albumID: string, storyID?: string): Promis
             __relay_internal__pv__IsWorkUserrelayprovider: false,
             __relay_internal__pv__StoriesLWRVariantrelayprovider: 'www_new_reactions'
         }, true);
-        const jar: CookieManager = new CookieManager(process.env.FACEBOOK_COOKIE, 'https://www.facebook.com/');
-        const extraResponse: RequestURL.Response<string> = await request.post<string>('https://www.facebook.com/api/graphql/', jar, { data: extraData });
+        const jar: Session = new Session(process.env.FACEBOOK_COOKIE, 'https://www.facebook.com/');
+        const extraResponse: Request.Response<string> = await request.post<string>('https://www.facebook.com/api/graphql/', jar, { body: extraData });
         const extra: GetStory.OriDetailsExtra = JSON.parse(extraResponse.body.split('\n')[0]);
 
         if (!extra.data?.bucket) {
@@ -230,7 +230,7 @@ export async function getStoryDetails(albumID: string, storyID?: string): Promis
 
 export async function getWatchAndReel(videoID: string): Promise<GetWatchAndReel.OutputDetails> {
     const srcURL: string = 'https://graph.facebook.com/v18.0/' + videoID;
-    const response: RequestURL.Response<string> = await request.get<string>(srcURL, undefined, {
+    const response: Request.Response<string> = await request.get<string>(srcURL, undefined, {
         params: {
             fields: 'id,description,created_time,source,thumbnails,reactions.summary(true),comments.summary(true),from{name,id}',
             access_token: process.env.FACEBOOK_TOKEN

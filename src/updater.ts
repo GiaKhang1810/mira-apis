@@ -6,21 +6,40 @@ import { tmpdir } from 'os';
 import cout from '@utils/cout';
 import { Request } from '@utils/request';
 
+import { version } from '../package.json';
+
 const cwd: string = process.cwd();
 const repo: string = 'https://github.com/GiaKhang1810/mira-apis.git';
 const tempClone = resolve(tmpdir(), 'mira-apis-latest');
 const backupDir: string = resolve(cwd, '.backup');
 
-const request: Request = new Request({ responseType: 'json' });
-
-import { version } from '../package.json';
+const request: Request = new Request({ type: 'json' });
 
 type GetVersionCurrent = {
     version: string;
 }
 
+function isHigherOrEqualVersion(current: string, target: string): boolean {
+    const cParts: Array<number> = current.split('.').map(Number);
+    const tParts: Array<number> = target.split('.').map(Number);
+    const length: number = Math.max(cParts.length, tParts.length);
+
+    for (let i = 0; i < length; i++) {
+        const cPart: number = cParts[i] ?? 0;
+        const tPart: number = tParts[i] ?? 0;
+
+        if (cPart < tPart)
+            return false;
+        
+        if (cPart > tPart)
+            return true;
+    }
+
+    return true;
+}
+
 async function getVersionCurrent(): Promise<string> {
-    const response: RequestURL.Response<GetVersionCurrent> = await request.get<GetVersionCurrent>('https://raw.githubusercontent.com/GiaKhang1810/mira-apis/refs/heads/main/package.json');
+    const response: Request.Response<GetVersionCurrent> = await request.get<GetVersionCurrent>('https://raw.githubusercontent.com/GiaKhang1810/mira-apis/refs/heads/main/package.json');
     const version: string = response.body?.version;
 
     if (version)
@@ -141,7 +160,7 @@ async function checkAndUpdate(): Promise<void> {
 
         const versionCurrent: string = await getVersionCurrent();
 
-        if (versionCurrent === version)
+        if (isHigherOrEqualVersion(version, versionCurrent))
             return;
 
         cout.info('System', 'Version ' + versionCurrent + ' is available. Refer to ' + repo);

@@ -1,6 +1,6 @@
-import express, { Router } from 'express';
+import { Express } from 'express';
+import { applyUniqueID } from './main';
 
-const routers: Router = express.Router();
-
-
-export default routers;
+export default async function userController(app: Express): Promise<void> {
+    app.use(applyUniqueID);
+}

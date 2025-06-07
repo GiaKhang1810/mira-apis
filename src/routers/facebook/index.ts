@@ -168,7 +168,7 @@ async function downloadWatchAndReel(req: Request, res: Response): Promise<void> 
         if (isShareURL(url))
             url = await getRedirectURL(url);
 
-        const match: RegExpMatchArray | null = /videos\/\?v=(\d+)/g.exec(url) || /videos\/(\d+)/g.exec(url) || url.match(/\/videos\/(?:[^/]+\/)?(\d+)/) || /reel\/(\d+)/g.exec(url);
+        const match: RegExpMatchArray | null = /watch\?v=(\d+)/g.exec(url) || /watch\/\?v=(\d+)/g.exec(url) || /videos\/\?v=(\d+)/g.exec(url) || /videos\/(\d+)/g.exec(url) || url.match(/\/videos\/(?:[^/]+\/)?(\d+)/) || /reel\/(\d+)/g.exec(url);
         
         if (!match) {
             const error: Error = new Error('Invalid Facebook video URL.');

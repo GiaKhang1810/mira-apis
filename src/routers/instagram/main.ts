@@ -1,14 +1,14 @@
-import { Request, CookieManager } from '@utils/request';
+import { Request, Session } from '@utils/request';
 import { GetReelAndPost, GetUserInfo } from './types';
 
-const requestOptions: RequestURL.Options = {
+const requestOptions: Request.Options = {
     headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'User-Agent': 'Instagram 123.0.0.21.114 Android (28/9; 420dpi; 1080x1920; Xiaomi; Redmi Note 7; lavender; qcom; en_US)',
         'X-IG-App-ID': '936619743392459'
     },
-    maxRedirect: 0,
-    responseType: 'text',
+    maxRedirects: 0,
+    type: 'text',
     core: 'fetch'
 }
 const request: Request = new Request(requestOptions);
@@ -24,7 +24,7 @@ async function getCSRFT(): Promise<string> {
             })
         }
     });
-    const jar: CookieManager = request.getJar();
+    const jar: Session = request.getJar();
     const cookies: Record<string, string> = jar.getCookie('https://www.instagram.com/');
     const token: string | undefined = cookies.csrftoken;
 
@@ -38,8 +38,8 @@ async function getCSRFT(): Promise<string> {
 }
 
 export async function getRedirectURL(url: string): Promise<string> {
-    const response: RequestURL.Response<string> = await request.get<string>(url, undefined, {
-        validateStatus: (status: number): boolean => status === 302
+    const response: Request.Response<string> = await request.get<string>(url, undefined, {
+        confirmStatus: (status: number): boolean => status === 302
     });
     const location: string | undefined = response.headers.location;
 
@@ -73,8 +73,8 @@ export async function getReelAndPost(shortcode: string, retries: number = 0): Pr
             }),
             doc_id: '9510064595728286'
         });
-        const response: RequestURL.Response<string> = await request.post<string>('https://www.instagram.com/graphql/query/', undefined, {
-            data,
+        const response: Request.Response<string> = await request.post<string>('https://www.instagram.com/graphql/query/', undefined, {
+            body: data,
             headers: {
                 'X-CSRFToken': await getCSRFT()
             }
@@ -164,7 +164,7 @@ export async function getReelAndPost(shortcode: string, retries: number = 0): Pr
 }
 
 export async function getUserInfo(username: string): Promise<GetUserInfo.OutputDetails> {
-    const response: RequestURL.Response<string> = await request.get<string>('https://www.instagram.com/api/v1/users/web_profile_info/', undefined, {
+    const response: Request.Response<string> = await request.get<string>('https://www.instagram.com/api/v1/users/web_profile_info/', undefined, {
         params: {
             username
         },

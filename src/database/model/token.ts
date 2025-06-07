@@ -1,4 +1,5 @@
 import { DataTypes, Model, Sequelize, Optional } from 'sequelize';
+import { DataBase } from '../database.js';
 
 interface DataCreate extends Optional<DataBase.Tokens, 'id' | 'createAt' | 'updatedAt'> {}
 

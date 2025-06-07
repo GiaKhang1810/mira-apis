@@ -3,6 +3,21 @@ let tz: string | undefined = process.env.TIMEZONE;
 if (!tz)
     tz = 'Asia/Ho_Chi_Minh';
 
+export namespace Time {
+    export interface Options {
+        hour12?: boolean;
+        year?: 'numeric' | '2-digit';
+        month?: 'numeric' | '2-digit';
+        day?: 'numeric' | '2-digit';
+        hour?: 'numeric' | '2-digit';
+        minute?: 'numeric' | '2-digit';
+        second?: 'numeric' | '2-digit';
+        weekday?: 'narrow' | 'short' | 'long';
+    }
+
+    export type GetTime = (format?: string, locale?: string, timezone?: string, timestamp?: Date | number, options?: Options) => string;
+}
+
 export const time: Time.GetTime = (format = 'HH:mm:ss DD/MM/YYYY dddd', locale = 'vi-VN', timezone = tz, timestamp = Date.now(), options: Time.Options = {}): string => {
     const date: Date = timestamp instanceof Date ? timestamp : new Date(timestamp);
 
