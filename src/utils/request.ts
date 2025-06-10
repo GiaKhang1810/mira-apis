@@ -167,7 +167,7 @@ class Request {
         if (rawCookie)
             (jar ?? this.jar).setCookie(rawCookie, url);
 
-        const confirm: boolean = confirmStatus && isFunction(confirmStatus) ? confirmStatus(status) : status >= 200 && status < 300;
+        const confirm: boolean = confirmStatus && isFunction(confirmStatus) ? confirmStatus(status) : true;
         if (!confirm) {
             const error: Request.Error<T> = {
                 message: 'Unacceptable status with code ' + status,
@@ -287,7 +287,7 @@ class Request {
                 headers: Object.fromEntries(Object.entries(headers)?.filter((entry: [string, string | undefined]): entry is [string, string] => typeof entry[1] === 'string')),
                 body: options.body,
                 credentials: (options.withCredentials ?? this.defaultOptions.withCredentials) ? 'include' : 'same-origin',
-                redirect: (options.maxRedirects ?? this.defaultOptions.maxRedirects ?? 0) > 0 ? 'follow' : 'manual'
+                redirect: (options.maxRedirects ?? this.defaultOptions.maxRedirects ?? 0) > 0 ? 'manual' : 'follow'
             }
 
             let timeoutID: NodeJS.Timeout | undefined;

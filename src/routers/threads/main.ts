@@ -32,7 +32,7 @@ export async function getPostDetails(url: string): Promise<GetPostDetails.Output
     const dom: DOM = new DOM(response.body);
     const scripts: Array<HTMLScriptElement> = Array.from(dom.window.document.querySelectorAll('script'));
 
-    let script: HTMLScriptElement | undefined = scripts.find((item: HTMLScriptElement): boolean => !!item.textContent && item.textContent.includes('username') && item.textContent.includes('original_width'));
+    const script: HTMLScriptElement | undefined = scripts.find((item: HTMLScriptElement): boolean => !!item.textContent && item.textContent.includes('username') && item.textContent.includes('original_width'));
 
     if (!script || !script.textContent)
         throw createError('Can\'t find image/video in url', '404');

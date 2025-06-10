@@ -210,6 +210,9 @@ async function getOrRefreshDtsg(firstRun: boolean = true): Promise<void> {
         if (data.error && data.error.code === 401)
             return cout.warn('Enviroment.getOrRefreshDtsg', 'Wrong username/password.');
 
+        if (data.error && data.error.code === 405)
+            return cout.warn('Enviroment.getOrRefreshDtsg', 'Please enable two-factor authentication.');
+
         if (data.error && data.error.code === 406) {
             const twofactor: string | undefined = process.env.FACEBOOK_TWO_FACTOR;
 

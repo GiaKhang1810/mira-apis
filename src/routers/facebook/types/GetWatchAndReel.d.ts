@@ -6,6 +6,26 @@ export namespace GetWatchAndReel {
         uri: string;
     }
 
+    export interface MediaWithoutCookie {
+        media: {
+            owner: {
+                id: string;
+            }
+            videoDeliveryLegacyFields: {
+                browser_native_hd_url: string;
+                browser_native_sd_url: string;
+            }
+            publish_time: number;
+        }
+    }
+
+    export interface OriDetailsWithoutCookie {
+        id: string;
+        story: {
+            attachments: Array<MediaWithoutCookie>;
+        }
+    }
+
     export interface OriDetails {
         error?: {
             message: string
@@ -38,7 +58,7 @@ export namespace GetWatchAndReel {
         userID: string;
         author: string;
         desc: string;
-        publishedAt: string;
+        publishedAt: string | number;
         reactCount: number;
         commentCount: number;
         url: string;

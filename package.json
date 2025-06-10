@@ -1,6 +1,6 @@
 {
     "name": "mira-apis",
-    "version": "1.7.4",
+    "version": "1.7.5",
     "description": "A simple server and client, providing convenient features for users",
     "main": "dist/index",
     "scripts": {
@@ -43,6 +43,7 @@
         "@types/ws": "^8.18.1",
         "@typescript-eslint/eslint-plugin": "^8.29.0",
         "@typescript-eslint/parser": "^8.29.0",
+        "canvas": "^3.1.0",
         "eslint": "^9.24.0",
         "google-auth-library": "^9.15.1",
         "googleapis": "^148.0.0",

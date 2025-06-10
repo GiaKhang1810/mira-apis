@@ -7,7 +7,7 @@ const requestOptions: Request.Options = {
         'User-Agent': 'Instagram 123.0.0.21.114 Android (28/9; 420dpi; 1080x1920; Xiaomi; Redmi Note 7; lavender; qcom; en_US)',
         'X-IG-App-ID': '936619743392459'
     },
-    maxRedirects: 0,
+    maxRedirects: 1,
     type: 'text',
     core: 'fetch'
 }

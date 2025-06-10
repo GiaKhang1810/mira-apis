@@ -16,6 +16,7 @@ declare module 'express-serve-static-core' {
             albumID?: string;
             shortcode?: string;
             download?: boolean;
+            count?: number;
         }
         body: {
             username?: string;
@@ -24,6 +25,7 @@ declare module 'express-serve-static-core' {
             albumID?: string;
             shortcode?: string;
             download?: boolean;
+            count?: number;
         }
     }
 }

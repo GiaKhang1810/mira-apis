@@ -175,7 +175,7 @@ function createMediaPreview(domain, data) {
             return;
         }
 
-        info.textContent = `Posted by ${data.author} on ${new Date(data.publishedAt.replace(/(\+0000)$/, 'Z')).toLocaleDateString()}`;
+        info.textContent = `Posted by ${data.author} on ${new Date(isNaN(data.publishedAt) ? data.publishedAt.replace(/(\+0000)$/, 'Z') : data.publishedAt * 1000).toLocaleDateString()}`;
         const item = createSinglePreviewElement('video', buildData(data.url, data.videoID));
         mediaPreviewContainer.appendChild(item);
         return;

@@ -13,3 +13,8 @@ export function HeartForYou_v2(req: Request, res: Response): void {
     res.status(200);
     res.render('foryou/heart_v2');
 }
+
+export function MyUniverse(req: Request, res: Response): void {
+    res.status(200);
+    res.render('foryou/galaxy');
+}

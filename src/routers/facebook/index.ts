@@ -189,7 +189,7 @@ async function downloadWatchAndReel(req: Request, res: Response): Promise<void> 
             return;
         }
 
-        cout.error('facebook.downloadStory', error);
+        cout.error('facebook.downloadWatchAndReel', error);
         res.status(500);
         res.json({
             message: 'Server error, please try again later.'
